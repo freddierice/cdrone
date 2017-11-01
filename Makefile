@@ -1,10 +1,20 @@
 CXX=g++
-CXX_FLAGS=-O2
+CXX_FLAGS=-std=c++14 -O2
 
 all: cdrone
 
-cdrone: cdrone.cpp
-	$(CXX) $(CXX_FLAGS) cdrone.cpp -o cdrone
+OBJS=$(patsubst %.cpp,%.o,$(wildcard *.cpp)) json/jsoncpp.o
+
+%.cpp: %.h
+
+%.o: %.cpp
+	$(CXX) $(CXX_FLAGS) -c $^ -o $@
+
+json/jsoncpp.o: json/jsoncpp.cpp
+	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
+	
+cdrone: $(OBJS)
+	$(CXX) $(CXX_FLAGS) $^ -o $@
 
 clean:
-	@rm -f cdrone
+	@rm -f cdrone *.o
