@@ -3,13 +3,15 @@
 #include <iostream>
 #include <fstream>
 
-#include "json/json.h"
-
-Config::Config(const std::string &filename) : m_filename(filename) {
+Config::Config(const std::string &filename) {
 	std::ifstream config_file(filename);
 	if (!config_file) { 
-		std::cerr << "could not open config file" << std::endl;
+		throw ConfigException();
 	}
 
-	// TODO: get json stuff here.
+	config_file >> this->m_root;
+}
+
+std::string Config::Name() {
+	return this->m_root.get("name", "<no-name>").asString();
 }

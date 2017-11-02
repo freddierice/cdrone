@@ -30,6 +30,8 @@
 *.exe
 *.out
 *.app
+cdrone
 
 # vim files
 *.swp
+
