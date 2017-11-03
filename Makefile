@@ -1,5 +1,5 @@
 CXX=g++
-CXX_FLAGS=-std=c++14 -O2
+CXX_FLAGS=-Wall -std=c++14 -O2
 
 all: cdrone
 
