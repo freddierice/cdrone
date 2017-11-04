@@ -1,6 +1,6 @@
 #include "Infrared.h"
 
-Infrared::Infrared(double alpha, double k) : m_adc(), m_alpha(alpha), m_k(k) {
+Infrared::Infrared(double alpha, double b, double k) : m_adc(), m_alpha(alpha), m_b(b), m_k(k) {
 	// save old default
 	m_defaultConfig = m_adc.getConfig();
 
@@ -16,9 +16,9 @@ Infrared::Infrared(double alpha, double k) : m_adc(), m_alpha(alpha), m_k(k) {
 
 	// get in the ballpark before launching the smoothed infrared.
 	update();
-	m_distance = m_k/(double)m_lastDistance;
+	m_distance = m_k/(double)m_voltage + m_b;
 }
-Infrared::Infrared() : Infrared(0,1) {}
+Infrared::Infrared() : Infrared(0,1,0) {}
 
 Infrared::~Infrared() {
 	m_adc.setConfig(m_defaultConfig);
@@ -28,22 +28,27 @@ double Infrared::distance() {
 	return m_distance;
 }
 
-uint16_t Infrared::raw() {
-	return m_lastDistance;
+uint16_t Infrared::voltage() {
+	return m_voltage;
 }
 
 void Infrared::update() {
+	double newDistance;
+
 	// get latest reading
-	m_lastDistance = m_adc.getConversion();
+	m_voltage = m_adc.getConversion();
 
 	// if it is a negative value, make it MIN_READING
-	m_lastDistance = m_lastDistance & 0x8000 ? MIN_READING : m_lastDistance;
+	m_voltage = m_voltage & 0x8000 ? MIN_READING : m_voltage;
 
 	// if it is less than MIN_READING, make it MIN_READING
-	m_lastDistance = m_lastDistance < MIN_READING ? MIN_READING : m_lastDistance;
+	m_voltage = m_voltage < MIN_READING ? MIN_READING : m_voltage;
+
+	// convert the raw distance to 
+	newDistance = m_k/(double)m_voltage + m_b;
 
 	// do smoothed distance
-	m_distance = (1-m_alpha)*m_distance + m_alpha*(m_k/((double)m_lastDistance*(double)m_lastDistance));
+	m_distance = (1-m_alpha)*m_distance + m_alpha*newDistance;
 }
 
-const uint16_t Infrared::MIN_READING = 240;
+const uint16_t Infrared::MIN_READING = 2000;

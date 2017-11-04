@@ -37,11 +37,12 @@ int main(int argc, const char *argv[]) try {
 
 	Config config("cdrone.conf");
 	std::cout << config.infraredAlpha() << " " << config.infraredK() << std::endl;
-	Infrared infrared(config.infraredAlpha(), config.infraredK());
+	Infrared infrared(config.infraredAlpha(), config.infraredB(), 
+			config.infraredK());
 	while(!shutdown) {
 		infrared.update();
 		//std::cout << infrared.raw() << std::endl;
-		std::cout << infrared.raw() << " " << infrared.distance() << std::endl;
+		std::cout << infrared.voltage() << " " << infrared.distance() << std::endl;
 	}
 
 	std::cerr << "shutting down" << std::endl;
