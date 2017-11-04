@@ -1,4 +1,4 @@
-#include "flightcontroller.h"
+#include "FlightController.h"
 
 FlightController::FlightController() : m_mode(Disarmed) {
 	

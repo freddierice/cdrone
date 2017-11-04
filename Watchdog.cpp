@@ -1,6 +1,6 @@
 #include <signal.h>
 #include <sys/time.h>
-#include "watchdog.h"
+#include "Watchdog.h"
 
 Watchdog::Watchdog(time_t delay_sec, useconds_t delay_usec) : m_delay_sec(delay_sec), m_delay_usec(delay_usec) {
 	signal(SIGALRM, Watchdog::kill);

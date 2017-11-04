@@ -1,6 +1,6 @@
 #include "MultiWii.h"
 
-#include "serial.h"
+#include "Serial.h"
 #include <string.h>
 
 

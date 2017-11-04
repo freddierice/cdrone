@@ -1,4 +1,4 @@
-#include "serial.h"
+#include "Serial.h"
 
 #include <iostream>
 #include <unistd.h>

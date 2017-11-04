@@ -1,5 +1,5 @@
-#ifndef __MULTIWII_H__
-#define __MULTIWII_H__
+#ifndef __MULTI_WII_H__
+#define __MULTI_WII_H__
 
 #include <inttypes.h>
 
@@ -37,4 +37,4 @@ private:
 	char* m_recv;
 };
 
-#endif /* __MULTIWII_H__ */
+#endif /* __MULTI_WII_H__ */

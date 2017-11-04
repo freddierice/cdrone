@@ -2,10 +2,11 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "config.h"
-#include "watchdog.h"
-#include "serial.h"
+#include "Config.h"
+#include "Watchdog.h"
+#include "Serial.h"
 #include "MultiWii.h"
+#include "Infrared.h"
 
 int main(int argc, const char *argv[]) try {
 
@@ -20,9 +21,14 @@ int main(int argc, const char *argv[]) try {
 			std::cout.flush();
 		}
 	}
+	*/
+
+	Infrared infrared;
+	for (;;) {
+		std::cout << infrared.distance() << std::endl;
+	}
 
 	return 0;
-	*/
 
 	Config config("cdrone.conf");
 	Watchdog watchdog(3,0);
