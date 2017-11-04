@@ -1,4 +1,4 @@
-PREFIX=armv8-rpi3-linux-gnueabihf-
+PREFIX=aarch64-rpi3-linux-gnueabi-
 CXX=$(PREFIX)g++
 CXX_FLAGS=-Wall -std=c++14 -O2
 
@@ -17,5 +17,12 @@ json/jsoncpp.o: json/jsoncpp.cpp
 cdrone: $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@
 
+push: cdrone
+	scp cdrone drone-home:
+
+run: cdrone
+	scp cdrone drone-home:
+	ssh drone-home ./cdrone
+
 clean:
-	@rm -f cdrone *.o
+	@rm -f cdrone *.o json/jsoncpp.o
