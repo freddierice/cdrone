@@ -11,9 +11,14 @@ class Config {
 public:
 	Config(const std::string &filename);
 
-	std::string Name();
+	const double& infraredAlpha() const { return m_infraredAlpha; }
+	const double& infraredK() const { return m_infraredK; }
+	const std::string& name() const { return m_name; }
 private:
 	Json::Value m_root;
+	std::string m_name;
+	double m_infraredAlpha;
+	double m_infraredK;
 };
 
 #endif /* __CONFIG_H__ */
