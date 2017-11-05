@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
+#include <spdlog/spdlog.h>
 
 // Watchdog shuts down the program when too much time has passed.
 class Watchdog {
@@ -18,8 +19,9 @@ public:
 	// stop stops the watchdog timer.
 	void stop();
 private:
+	// TODO: watchdog should register callbacks to reset hardware.
 	static void kill(int) {
-		std::cout << "watchdog killed program" << std::endl;
+		spdlog::get("console")->error("watchdog killed program");
 		std::exit(1);
 	}
 	

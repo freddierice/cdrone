@@ -15,7 +15,7 @@ json/jsoncpp.o: json/jsoncpp.cpp
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
 	
 cdrone: $(OBJS)
-	$(CXX) $(CXX_FLAGS) $^ -o $@
+	$(CXX) $(CXX_FLAGS) $^ -o $@ -lpthread
 
 push: cdrone
 	scp cdrone drone-home:

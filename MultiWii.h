@@ -24,7 +24,6 @@ public:
 	bool sendCMD(MultiWiiCMD cmd);
 	bool sendCMD(MultiWiiCMD cmd, char *buf, uint8_t n);
 	
-
 	bool sendArm();
 	bool sendDisarm();
 	

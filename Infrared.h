@@ -2,6 +2,8 @@
 #define __INFRARED_H__
 
 #include "ADS1115.h"
+
+#include <atomic>
 #include <inttypes.h>
 
 class Infrared {
@@ -10,17 +12,22 @@ public:
 	Infrared(double alpha, double b, double k);
 	~Infrared();
 
+	void update();
+
 	double distance();
 	uint16_t voltage();
-	void update();
+
 private:
 	ADS1115 m_adc;
 	uint16_t m_defaultConfig;
-	double m_distance;
 	double m_alpha;
 	double m_b;
 	double m_k;
-	uint16_t m_voltage;
+	
+	// atomic for variables 
+	std::atomic<double> m_distance;
+	std::atomic<uint16_t> m_voltage;
+	
 	static const uint16_t MIN_READING;
 };
 

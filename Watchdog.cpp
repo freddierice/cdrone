@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <sys/time.h>
+#include <spdlog/spdlog.h>
 #include "Watchdog.h"
 
 Watchdog::Watchdog(time_t delay_sec, useconds_t delay_usec) : m_delay_sec(delay_sec), m_delay_usec(delay_usec) {
@@ -18,7 +19,7 @@ void Watchdog::ok() {
 	t.it_interval.tv_usec = 0;
 
 	if (setitimer(ITIMER_REAL, &t, NULL)) {
-		std::cerr << "watchdog could not set timer" << std::endl;
+		spdlog::get("console")->error("watchdog could not set timer");
 		std::exit(1);
 	}
 }
@@ -31,7 +32,7 @@ void Watchdog::stop() {
 	t.it_interval.tv_usec = 0;
 
 	if (setitimer(ITIMER_REAL, &t, NULL)) {
-		std::cerr << "watchdog could not set timer" << std::endl;
+		spdlog::get("console")->error("watchdog could not set timer");
 		std::exit(1);
 	}
 }

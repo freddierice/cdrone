@@ -25,30 +25,35 @@ Infrared::~Infrared() {
 }
 
 double Infrared::distance() {
-	return m_distance;
+	return m_distance.load(std::memory_order_acquire);
 }
 
 uint16_t Infrared::voltage() {
-	return m_voltage;
+	return m_voltage.load(std::memory_order_acquire);
 }
 
 void Infrared::update() {
-	double newDistance;
+	double newDistance, oldDistance;
+	uint16_t newVoltage;
 
 	// get latest reading
-	m_voltage = m_adc.getConversion();
+	newVoltage = m_adc.getConversion();
 
 	// if it is a negative value, make it MIN_READING
-	m_voltage = m_voltage & 0x8000 ? MIN_READING : m_voltage;
-
 	// if it is less than MIN_READING, make it MIN_READING
-	m_voltage = m_voltage < MIN_READING ? MIN_READING : m_voltage;
+	newVoltage = newVoltage & 0x8000 ? MIN_READING : newVoltage;
+	newVoltage = newVoltage < MIN_READING ? MIN_READING : newVoltage;
 
-	// convert the raw distance to 
-	newDistance = m_k/(double)m_voltage + m_b;
+	// convert the voltage to raw distance
+	newDistance = m_k/(double)newVoltage + m_b;
 
 	// do smoothed distance
-	m_distance = (1-m_alpha)*m_distance + m_alpha*newDistance;
+	oldDistance = m_distance.load(std::memory_order_acquire);
+	newDistance = (1-m_alpha)*oldDistance + m_alpha*newDistance;
+
+	// update the atomics
+	m_distance.store(newDistance, std::memory_order_relaxed);
+	m_voltage.store(newVoltage, std::memory_order_release);
 }
 
 const uint16_t Infrared::MIN_READING = 2000;

@@ -1,64 +1,96 @@
-#include <iostream>
 #include <atomic>
+#include <iostream>
+#include <thread>
+
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+
+#include <spdlog/spdlog.h>
 
 #include "Config.h"
 #include "Watchdog.h"
 #include "Serial.h"
 #include "MultiWii.h"
 #include "Infrared.h"
-
-std::atomic_bool shutdown;
-
-void shutdown_handler(int sig) {
-	shutdown = true;
-	std::cerr << "SIGINT -- shutting down" << std::endl;
+#include "main.h"
+#include "utility.h"
+	
+void do_update(Watchdog &watchdog, Infrared &infrared) {
+	
+	// start loop
+	spdlog::get("console")->info("update loop started");
+	watchdog.start();
+	while (!shutdown) {
+		watchdog.ok();
+		infrared.update();
+	}
 }
 
-int main(int argc, const char *argv[]) try {
-
-	// install signal handler
-	signal(SIGINT, shutdown_handler);
-
-	/*
-	Serial serial("/dev/ttyUSB0");
-	MultiWii m(serial);
-	m.sendCMD(MultiWiiCMD::MSP_STATUS);
-	for (;;) {
-		char b;
-		if (serial.readFull(&b, 1)) {
-			std::cout << b;
-			std::cout.flush();
-		}
+void do_io(Watchdog &watchdog, Config &config) {
+	
+	spdlog::get("console")->info("io loop started");
+	watchdog.start();
+	while (!shutdown) {
+		watchdog.ok();
+		usleep(100000);
 	}
-	*/
+}
 
-	Config config("cdrone.conf");
-	std::cout << config.infraredAlpha() << " " << config.infraredK() << std::endl;
+void do_analysis(Watchdog &watchdog, Config &config) {
+
+	spdlog::get("console")->info("analysis loop started");
+	watchdog.start();
+	while (!shutdown) {
+		watchdog.ok();
+		usleep(100000);
+	}
+}
+
+void do_controller(Watchdog &watchdog, Config &config) {
+	
+	spdlog::get("console")->info("controller loop started");
+	watchdog.start();
+	while (!shutdown) {
+		watchdog.ok();
+		usleep(100000);
+	}
+}
+
+void cdrone(Config &config) {
+
+	// initialize the watchdogs
+	spdlog::get("console")->info("initializing watchdogs");
+	Watchdog updateWatchdog(config.updateWatchdog(), 0);
+	Watchdog ioWatchdog(config.ioWatchdog(), 0);
+	Watchdog analysisWatchdog(config.analysisWatchdog(), 0);
+	Watchdog controllerWatchdog(config.controllerWatchdog(), 0);
+	
+	// initialize the hardware
+	spdlog::get("console")->info("initializing infrared");
 	Infrared infrared(config.infraredAlpha(), config.infraredB(), 
 			config.infraredK());
-	while(!shutdown) {
-		infrared.update();
-		//std::cout << infrared.raw() << std::endl;
-		std::cout << infrared.voltage() << " " << infrared.distance() << std::endl;
-	}
 
-	std::cerr << "shutting down" << std::endl;
-
-	return 0;
-
-	Watchdog watchdog(3,0);
-
-	watchdog.start();
-	for(;;) {
-		watchdog.ok();
-		sleep(1);
-		std::cout << "Name: " << config.name() << std::endl;
-	}
-	return 0;
-} catch (ConfigException& ex) {
-	std::cerr << "could not parse config file" << std::endl;
-	return 1;
+	// create threads
+	spdlog::get("console")->info("creating threads");
+	pthread_block(SIGINT);
+	std::thread update_thr(do_update, std::ref(updateWatchdog), 
+			std::ref(infrared));
+	std::thread analysis_thr(do_analysis, std::ref(analysisWatchdog), 
+			std::ref(config));
+	std::thread io_thr(do_io, std::ref(ioWatchdog), std::ref(config));
+	std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
+			std::ref(config));
+	pthread_unblock(SIGINT);
+	
+	// join with threads
+	update_thr.join(); 
+	spdlog::get("console")->info("update thread joined");
+	io_thr.join(); 
+	spdlog::get("console")->info("io thread joined");
+	analysis_thr.join(); 
+	spdlog::get("console")->info("analysis thread joined");
+	controller_thr.join();
+	spdlog::get("console")->info("controller thread joined");
 }
+
