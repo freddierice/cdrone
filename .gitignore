@@ -41,3 +41,7 @@ keys/base.pem
 keys/ca.pem
 keys/drone-key.pem
 keys/drone.pem
+
+# do not add proto generated files
+proto/*.pb.cc
+proto/*.pb.h
