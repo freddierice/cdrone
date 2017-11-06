@@ -1,0 +1,16 @@
+{
+    "hosts": [
+		"drone"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 4096
+    },
+    "names": [
+        {
+            "C":  "US",
+            "O":  "drone",
+            "CN": "drone"
+        }
+    ]
+}

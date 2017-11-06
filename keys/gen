@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cfssl genkey -initca root-csr.json | cfssljson -bare ca
+cfssl gencert -ca ca.pem -ca-key ca-key.pem drone-csr.json | cfssljson -bare drone
+cfssl gencert -ca ca.pem -ca-key ca-key.pem base-csr.json | cfssljson -bare base
+
+rm -f ca-key.pem ca.csr drone.csr base.csr
