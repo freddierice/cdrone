@@ -66,7 +66,8 @@ int main(int argc, const char *argv[]) try {
 
 	return 0;
 } catch (ConfigException& ex) {
-	std::cerr << "could not parse config file" << std::endl;
+	std::cerr << "could not parse config file:" << std::endl << ex.what() <<
+		std::endl;
 	return 1;
 }
 

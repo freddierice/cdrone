@@ -4,7 +4,10 @@
 
 #include "json/json.h"
 
-class ConfigException : public std::exception {};
+class ConfigException : public std::runtime_error {
+public:
+	ConfigException(std::string const& msg) : std::runtime_error(msg) {}
+};
 
 // Config holds configurations that are not needed at compile time.
 class Config {
