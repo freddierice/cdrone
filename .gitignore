@@ -35,3 +35,9 @@ cdrone
 # vim files
 *.swp
 
+# do not add key files
+keys/base-key.pem
+keys/base.pem
+keys/ca.pem
+keys/drone-key.pem
+keys/drone.pem
