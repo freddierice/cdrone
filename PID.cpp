@@ -1,6 +1,7 @@
 #include "PID.h"
 #include <limits>
 #include <time.h>
+#include "utility.h"
 
 PID::PID() : PID(0,0,0) {}
 PID::PID(double p, double i, double d) : PID(p,i,d,
@@ -11,16 +12,10 @@ PID::PID(double p, double i, double d, double min, double max) : m_p(p),
 	reset();
 }
 
-double PID::getTime() {
-	struct timespec ts;
-	::clock_gettime(CLOCK_REALTIME, &ts);
-	return (double)ts.tv_sec + ((double)ts.tv_nsec)/1000000000;
-}
-
 double PID::step(double err) {
 	double all, now, deltaTime;
 
-	now = getTime();
+	now = ::get_time();
 	deltaTime = now - m_lastTime;
 
 	// add up all the terms

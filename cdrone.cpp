@@ -6,6 +6,7 @@
 #include <string.h>
 #include <signal.h>
 
+#include <openssl/ssl.h>
 #include <spdlog/spdlog.h>
 
 #include "Config.h"
@@ -28,6 +29,9 @@ void do_update(Watchdog &watchdog, Infrared &infrared) {
 }
 
 void do_io(Watchdog &watchdog, Config &config) {
+
+	spdlog::get("console")->info("initializing io server");
+
 	
 	spdlog::get("console")->info("io loop started");
 	watchdog.start();
