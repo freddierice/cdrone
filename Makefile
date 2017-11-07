@@ -34,4 +34,4 @@ run: $(TARGET)
 	ssh drone-home ./$(TARGET)
 
 clean:
-	@rm -f $(TARGET) **/*.o proto/*.pb.*
+	@rm -f $(TARGET) *.o */*.o proto/*.pb.*
