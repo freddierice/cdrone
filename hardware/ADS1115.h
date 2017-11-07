@@ -1,7 +1,7 @@
 #ifndef __ADS1115_H__
 #define __ADS1115_H__
 
-#include "I2C.h"
+#include "wire/I2C.h"
 #include <inttypes.h>
 
 class ADS1115 {

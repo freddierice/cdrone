@@ -1,12 +1,17 @@
-PREFIX=armv8-rpi3-linux-gnueabihf-
-CXX=$(PREFIX)g++
-CXX_FLAGS=-Wall -std=c++14 -O2
+PREFIX:=armv8-rpi3-linux-gnueabihf-
+CXX:=$(PREFIX)g++
+CXX_FLAGS:=-Wall -std=c++14 -O2
+LIBS:=-lpthread -lssl -lcrypto -lprotobuf
+TARGET:=cdrone
 
-all: cdrone
+all: $(TARGET)
 
-OBJS=$(patsubst %.cpp,%.o,$(wildcard *.cpp)) json/jsoncpp.o proto/io.pb.o
+#MODULES=controller hardware json programs wire
+OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */*.cc)) main.o proto/io.pb.o
 
+# TODO: do expansion for cpp and cc files that actually have .h files.
 %.cpp: %.h
+%.cc: %.h
 
 %.o: %.cpp
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
@@ -14,18 +19,19 @@ OBJS=$(patsubst %.cpp,%.o,$(wildcard *.cpp)) json/jsoncpp.o proto/io.pb.o
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
 
-cdrone: $(OBJS)
-	$(CXX) $(CXX_FLAGS) $^ -o $@ -lpthread -lssl -lcrypto -lprotobuf
-
 %.pb.cc: %.proto
 	protoc -I=proto --cpp_out=proto $<
 
-push: cdrone
-	scp cdrone drone-home:
+$(TARGET): $(OBJS)
+	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)
 
-run: cdrone
-	scp cdrone drone-home:
-	ssh drone-home ./cdrone
+# phony directives
+push: $(TARGET)
+	scp $(TARGET) drone-home:
+
+run: $(TARGET)
+	scp $(TARGET) drone-home:
+	ssh drone-home ./$(TARGET)
 
 clean:
-	@rm -f cdrone *.o json/jsoncpp.o proto/*.pb.*
+	@rm -f $(TARGET) **/*.o proto/*.pb.*

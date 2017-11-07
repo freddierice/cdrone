@@ -1,6 +1,6 @@
-#include "MultiWii.h"
+#include "controller/MultiWii.h"
+#include "wire/Serial.h"
 
-#include "Serial.h"
 #include <string.h>
 
 

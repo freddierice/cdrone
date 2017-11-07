@@ -1,7 +1,14 @@
+#include "main.h"
+#include "controller/MultiWii.h"
+#include "controller/Watchdog.h"
+#include "hardware/Infrared.h"
+#include "misc/Config.h"
+#include "misc/utility.h"
+#include "wire/Serial.h"
+	
 #include <atomic>
 #include <iostream>
 #include <thread>
-
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -9,14 +16,6 @@
 #include <openssl/ssl.h>
 #include <spdlog/spdlog.h>
 
-#include "Config.h"
-#include "Watchdog.h"
-#include "Serial.h"
-#include "MultiWii.h"
-#include "Infrared.h"
-#include "main.h"
-#include "utility.h"
-	
 void do_update(Watchdog &watchdog, Infrared &infrared) {
 	
 	// start loop

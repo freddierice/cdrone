@@ -8,14 +8,9 @@
 
 #include <spdlog/spdlog.h>
 
-#include "Config.h"
-#include "Watchdog.h"
-#include "Serial.h"
-#include "MultiWii.h"
-#include "Infrared.h"
-#include "cdrone.h"
-#include "test.h"
-#include "utility.h"
+#include "misc/Config.h"
+#include "program/cdrone.h"
+#include "program/test.h"
 	
 // shutdown handlers.
 std::atomic_bool shutdown;
@@ -49,6 +44,8 @@ int main(int argc, const char *argv[]) try {
 		} else if (!strcmp(program, "watchdog")) {
 			spdlog::get("console")->info("starting test_watchdog");
 			test_watchdog(config);
+		} else if (!strcmp(program, "calibrate")) {
+
 		} else {
 			spdlog::get("console")->error("{} is not a valid program", program);
 			return 1;

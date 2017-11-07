@@ -1,7 +1,7 @@
 #ifndef __INFRARED_H__
 #define __INFRARED_H__
 
-#include "ADS1115.h"
+#include "hardware/ADS1115.h"
 
 #include <atomic>
 #include <inttypes.h>

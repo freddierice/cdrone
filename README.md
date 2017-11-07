@@ -10,3 +10,6 @@ In Tree:
 
 ## References
  * `json/` contains files from the jsoncpp project.
+
+## TODO 
+ * use https://bitbucket.org/eigen/eigen

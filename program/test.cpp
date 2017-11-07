@@ -8,12 +8,12 @@
 
 #include <spdlog/spdlog.h>
 
-#include "Config.h"
-#include "Watchdog.h"
-#include "Serial.h"
-#include "MultiWii.h"
-#include "Infrared.h"
 #include "main.h"
+#include "controller/MultiWii.h"
+#include "controller/Watchdog.h"
+#include "hardware/Infrared.h"
+#include "misc/Config.h"
+#include "wire/Serial.h"
 
 // test_infrared writes voltages and distances to stdout.
 void test_infrared(Config &config) {
