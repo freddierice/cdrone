@@ -53,10 +53,15 @@ void do_analysis(Watchdog &watchdog, Config &config) {
 void do_controller(Watchdog &watchdog, Config &config) {
 	
 	spdlog::get("console")->info("controller loop started");
-	watchdog.start();
-	while (!shutdown) {
-		watchdog.ok();
-		usleep(100000);
+	while(!shutdown) {
+		// wait for someone to connect.
+		watchdog.stop();
+		
+		watchdog.start();
+		while (!shutdown) {
+			watchdog.ok();
+			usleep(100000);
+		}
 	}
 }
 

@@ -22,9 +22,14 @@ public:
 	const time_t& ioWatchdog() const { return m_ioWatchdog; }
 	const time_t& analysisWatchdog() const { return m_analysisWatchdog; }
 	const time_t& controllerWatchdog() const { return m_controllerWatchdog; }
+	const std::string& certificate() const { return m_certificate; }
+	const std::string& key() const { return m_key; }
+	const uint16_t& port() const {return m_port; }
 private:
 	Json::Value m_root;
 	std::string m_name;
+	std::string m_key;
+	std::string m_certificate;
 	double m_infraredAlpha;
 	double m_infraredB;
 	double m_infraredK;
@@ -32,6 +37,7 @@ private:
 	time_t m_ioWatchdog;
 	time_t m_analysisWatchdog;
 	time_t m_controllerWatchdog;
+	uint16_t m_port;
 };
 
 #endif /* __CONFIG_H__ */

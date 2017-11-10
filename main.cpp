@@ -6,6 +6,8 @@
 #include <string.h>
 #include <signal.h>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <spdlog/spdlog.h>
 
 #include "misc/Config.h"
@@ -24,12 +26,17 @@ void setup_signals() {
 void setup_loggers() {
 	spdlog::stdout_color_mt("console");
 }
+void setup_ssl() {
+	SSL_load_error_strings();
+	OpenSSL_add_ssl_algorithms();
+}
 
 // main program
 int main(int argc, const char *argv[]) try {
 	Config config("cdrone.conf");
 	setup_signals();
 	setup_loggers();
+	setup_ssl();
 
 
 	// run program for testing
@@ -45,7 +52,9 @@ int main(int argc, const char *argv[]) try {
 			spdlog::get("console")->info("starting test_watchdog");
 			test_watchdog(config);
 		} else if (!strcmp(program, "calibrate")) {
-
+		
+		} else if (!strcmp(program, "ssl")) {
+			test_ssl(config);
 		} else {
 			spdlog::get("console")->error("{} is not a valid program", program);
 			return 1;

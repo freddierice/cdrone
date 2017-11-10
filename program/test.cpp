@@ -14,6 +14,7 @@
 #include "hardware/Infrared.h"
 #include "misc/Config.h"
 #include "wire/Serial.h"
+#include "wire/Server.h"
 
 // test_infrared writes voltages and distances to stdout.
 void test_infrared(Config &config) {
@@ -68,4 +69,17 @@ void test_watchdog(Config &config) {
 
 	spdlog::get("console")->info("hanging");
 	while (true) {}
+}
+
+void test_ssl(Config &config) try {
+
+	char buf[6];
+	Server server(config.port(), config.certificate(), config.key());
+	server.accept();
+	server.readAll(buf, 5);
+	buf[5] = 0;
+	spdlog::get("console")->info("recieved: {}", buf);
+
+} catch(ServerException &ex) {
+	spdlog::get("console")->error("could not start server: {}", ex.what());
 }
