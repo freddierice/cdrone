@@ -18,12 +18,16 @@ public:
 	~Server();
 
 	void accept();
+	void reset();
+
 	void readAll(void *buf, int size);
 
 private:
 	Server();
 	static SSL_CTX* ssl_create_context(const char *cert, const char *privkey);
 	static int create_socket(uint16_t port);
+	void init();
+	void cleanup();
 
 	SSL_CTX* m_ctx;
 	SSL *m_ssl;

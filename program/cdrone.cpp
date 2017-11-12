@@ -1,5 +1,6 @@
 #include "main.h"
 #include "controller/MultiWii.h"
+#include "controller/IOController.h"
 #include "controller/Watchdog.h"
 #include "hardware/Infrared.h"
 #include "misc/Config.h"
@@ -30,12 +31,13 @@ void do_update(Watchdog &watchdog, Infrared &infrared) {
 void do_io(Watchdog &watchdog, Config &config) {
 
 	spdlog::get("console")->info("initializing io server");
-
+	IOController io(config);
 	
 	spdlog::get("console")->info("io loop started");
 	watchdog.start();
 	while (!shutdown) {
 		watchdog.ok();
+		io.getMessage();
 		usleep(100000);
 	}
 }

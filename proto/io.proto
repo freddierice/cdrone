@@ -15,6 +15,9 @@ enum Mode {
 	POSITION = 1;
 }
 
+message Heartbeat {
+}
+
 message SetMode {
 	required Mode mode = 1;
 }

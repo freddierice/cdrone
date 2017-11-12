@@ -13,16 +13,40 @@
 Server::Server(uint16_t port, const std::string& certificate,
 		const std::string& key) : m_ssl(0), m_certificate(certificate), 
 		m_key(key), m_client_fd(0), m_port(port) {
-	
-	m_ctx = ssl_create_context(certificate.c_str(), key.c_str());
-	m_server_fd = create_socket(m_port);
+	init();
 }
 
 Server::~Server() {
-	if (m_client_fd > 0) ::close(m_client_fd);
-	if (m_server_fd > 0) ::close(m_server_fd);
-	if (m_ssl) SSL_free(m_ssl);
-	if (m_ctx) SSL_CTX_free(m_ctx);
+	cleanup();
+}
+
+void Server::reset() {
+	cleanup();
+	init();
+}
+
+void Server::init() {
+	m_ctx = ssl_create_context(m_certificate.c_str(), m_key.c_str());
+	m_server_fd = create_socket(m_port);
+}
+
+void Server::cleanup() {
+	if (m_ssl) {
+		SSL_free(m_ssl);
+		m_ssl = 0;
+	}
+	if (m_client_fd > 0) {
+		::close(m_client_fd);
+		m_client_fd = 0;
+	}
+	if (m_server_fd > 0) {
+		::close(m_server_fd);
+		m_server_fd = 0;
+	}
+	if (m_ctx) {
+		SSL_CTX_free(m_ctx);
+		m_ctx = (SSL_CTX*)0;
+	}
 }
 
 void Server::accept() {
@@ -82,6 +106,7 @@ SSL_CTX* Server::ssl_create_context(const char *cert, const char *privkey) {
 int Server::create_socket(uint16_t port) {
     int fd; 
     struct sockaddr_in addr;
+	int one = 1;
     
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -90,6 +115,8 @@ int Server::create_socket(uint16_t port) {
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw ServerException("could not create socket");
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char*)&one, sizeof(one)) < 0)
+		throw ServerException("could not setsockopt SO_REUSEADDR");
     if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 		throw ServerException("could not bind to a socket");
     if (listen(fd, 1) < 0)
