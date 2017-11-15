@@ -1,23 +1,22 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package io;
 
-// use required because both client and drone must be up to date.
+message UpdateVelocity {
+	double roll = 1;
+	double pitch = 2;
+	double yaw = 3;
+	double throttle = 4;
+}
+	
+enum UpdateMode {
+	ARM = 0;
+	DISARM = 1;
+};
 
-message SetVelocity {
-	required double x = 1;
-	required double y = 2;
-	required double z = 3;
+message Update {
+	UpdateVelocity velocity = 1;
+	UpdateMode mode = 2;
 }
 
-enum Mode {
-	VELOCITY = 0;
-	POSITION = 1;
-}
 
-message Heartbeat {
-}
-
-message SetMode {
-	required Mode mode = 1;
-}

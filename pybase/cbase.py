@@ -3,6 +3,8 @@
 import socket
 import ssl
 import os
+import threading
+import time
 
 class CBaseError(Exception):
     '''Exception for CBase.'''
@@ -21,6 +23,7 @@ class CBase:
         self.host = host
         self.port = port
         self.conn = None
+        self.heartbeat_thread = None
         pass
 
     def __enter__(self):
@@ -33,11 +36,25 @@ class CBase:
 
     def start_heartbeats(self):
         '''start the heartbeats.'''
-        pass
+        if self.heartbeat_thread is not None:
+            return
+        self.heartbeat_thread_stop = False
+        self.heartbeat_thread = threading.Thread(target=self._send_heartbeats)
+        self.heartbeat_thread.start()
+
+    def _send_heartbeats(self):
+        '''send a heartbeat.'''
+        while not self.heartbeat_thread_stop:
+            #TODO: send heartbeat over the wire.
+            time.sleep(1)
 
     def stop_heartbeats(self):
         '''stop the heartbeats.'''
-        pass
+        if self.heartbeat_thread is None:
+            return
+        self.heartbeat_thread_stop = True
+        self.heartbeat_thread.join()
+        self.heartbeat_thread = None
     
     def connect(self):
         '''connect will connect the base to the drone and initialize

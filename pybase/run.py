@@ -2,7 +2,7 @@
 '''cbase is a module for controlling the cdrone.'''
 
 import sys
-from time import sleep
+import time
 from cbase import CBase, CBaseError
 
 def usage():
@@ -25,7 +25,7 @@ def main():
     
     try:
         with CBase(host,port) as cbase:
-            sleep(3)
+            time.sleep(3)
     except CBaseError as err:
         print(err)
 
