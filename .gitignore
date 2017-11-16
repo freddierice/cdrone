@@ -30,7 +30,7 @@
 *.exe
 *.out
 *.app
-cdrone
+cdrone/cdrone
 
 # vim files
 *.swp
@@ -43,8 +43,8 @@ keys/drone-key.pem
 keys/drone.pem
 
 # do not add proto generated files
-proto/*.pb.cc
-proto/*.pb.h
+cdrone/proto/*.pb.cc
+cdrone/proto/*.pb.h
 
 # do not add python pycache
-cbase/__pycache__/*
+cbase/__pycache__/
