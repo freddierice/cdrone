@@ -28,10 +28,10 @@ $(TARGET): $(OBJS)
 
 # phony directives
 push: $(TARGET)
-	scp $(TARGET) drone-home:
+	scp $(TARGET) drone-arch:
 
 run: $(TARGET)
-	scp $(TARGET) drone-home:
+	scp $(TARGET) drone-arch:
 	ssh drone-home ./$(TARGET)
 
 clean:

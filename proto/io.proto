@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io;
+package proto;
 
 message UpdateVelocity {
 	double roll = 1;

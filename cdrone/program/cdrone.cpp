@@ -44,18 +44,18 @@ void do_io(Watchdog &watchdog, Config &config,
 		console->info("io loop started");
 		watchdog.start();
 		while (!shutdown) {
-			io::Update update;
+			proto::Update update;
 			ioController.getMessage(update);
 			watchdog.ok();
 			switch (update.mode()) {
-				case io::UpdateMode::NO_MODE_CHANGE:
+				case proto::UpdateMode::NO_MODE_CHANGE:
 					// SPDLOG_DEBUG(console, "no mode change");
 					break;
-				case io::UpdateMode::ARM:
+				case proto::UpdateMode::ARM:
 					SPDLOG_DEBUG(console, "arming");
 					flightController.arm();
 					break;
-				case io::UpdateMode::DISARM:
+				case proto::UpdateMode::DISARM:
 					SPDLOG_DEBUG(console, "disarming");
 					flightController.disarm();
 					break;

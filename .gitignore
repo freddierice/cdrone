@@ -45,6 +45,9 @@ keys/drone.pem
 # do not add proto generated files
 cdrone/proto/*.pb.cc
 cdrone/proto/*.pb.h
+gobase/proto/*.pb.go
 
 # do not add python pycache
 cbase/__pycache__/
+
+
