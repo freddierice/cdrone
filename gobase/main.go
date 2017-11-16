@@ -2,6 +2,15 @@ package main
 
 import "fmt"
 
+func startGUI() {
+	// TODO: start the gui
+}
+
+func readKeys() {
+}
+
 func main() {
-	fmt.Println("start cdrone")
+	startGUI()
+	readKeys()
+	fmt.Println("shutting down.")
 }
