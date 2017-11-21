@@ -5,15 +5,22 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
+	"sync"
 	"time"
+
+	"../proto"
+	protobuf "github.com/golang/protobuf/proto"
 )
 
 // Base holds a connection to a base.
 type Base struct {
-	conn net.Conn
-	stop chan bool
+	conn        net.Conn
+	stop        bool
+	messageChan chan protobuf.Message
+	wg          *sync.WaitGroup
 }
 
 // Config holds configurations for a Base.
@@ -91,27 +98,77 @@ func New(config Config) (*Base, error) {
 		}
 	}
 
+	// initialize the base for reference
+	base := &Base{
+		conn: conn,
+		stop: false,
+	}
+
 	// start the heartbeats for the life of this base.
-	stop := make(chan bool, 1)
-	//messageChan := make(chan
-	go func() {
-		for stop != nil {
-			time.Sleep(time.Second)
-		}
+	messageChan := make(chan protobuf.Message, 5)
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	defer func() {
+		go func() {
+			for pb := range messageChan {
+				base.SendMessage(pb)
+			}
+			wg.Done()
+		}()
+		go func() {
+			for !base.stop {
+				time.Sleep(time.Second)
+				messageChan <- &proto.Update{
+					Mode: proto.UpdateMode_NO_MODE_CHANGE,
+				}
+			}
+			close(messageChan)
+			wg.Done()
+		}()
 	}()
 
-	return &Base{
-		conn: conn,
-		stop: stop,
-	}, nil
+	base.messageChan = messageChan
+	base.wg = wg
+
+	return base, nil
+}
+
+func writeFull(w io.Writer, buf []byte) error {
+	n := 0
+	for n != len(buf) {
+		n, err := w.Write(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+	}
+
+	return nil
+}
+
+// SendMessage sends a protobuf message to the drone.
+func (base *Base) SendMessage(pb protobuf.Message) error {
+	pbLen := protobuf.Size(pb)
+	buf, err := protobuf.Marshal(pb)
+	if err != nil {
+		return err
+	}
+
+	lenBuf := protobuf.EncodeVarint(uint64(pbLen))
+	if err := writeFull(base.conn, lenBuf); err != nil {
+		return err
+	}
+	if err := writeFull(base.conn, buf); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Close closes a connection to the drone.
 func (base *Base) Close() {
-	if base.stop != nil {
-		close(base.stop)
-	}
-	// TODO: add 'join' channels.
+	base.stop = true
+	base.wg.Wait()
 	if base.conn != nil {
 		base.conn.Close()
 		base.conn = nil
