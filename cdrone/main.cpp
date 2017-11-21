@@ -10,6 +10,7 @@
 #include <openssl/err.h>
 #include <spdlog/spdlog.h>
 
+#include "controller/Watchdog.h"
 #include "misc/Config.h"
 #include "program/cdrone.h"
 #include "program/test.h"
@@ -30,14 +31,18 @@ void setup_ssl() {
 	SSL_load_error_strings();
 	OpenSSL_add_ssl_algorithms();
 }
+void setup_watchdog() {
+	Watchdog::initialize(10);
+}
 
 // main program
 int main(int argc, const char *argv[]) try {
+	setup_loggers();
+
 	Config config("cdrone.conf");
 	setup_signals();
-	setup_loggers();
 	setup_ssl();
-
+	setup_watchdog();
 
 	// run program for testing
 	const char *program = argv[1];
@@ -66,6 +71,9 @@ int main(int argc, const char *argv[]) try {
 	// the main event
 	spdlog::get("console")->info("starting cdrone");
 	cdrone(config);
+
+	spdlog::get("console")->info("joining with Watchdog lib");
+	Watchdog::destroy();
 
 	// close the loggers
 	spdlog::drop_all();

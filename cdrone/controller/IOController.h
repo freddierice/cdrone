@@ -23,8 +23,10 @@ public:
 
 private:
 	Server m_server;
-	google::protobuf::io::ZeroCopyInputStream* m_input;
-	google::protobuf::io::ZeroCopyOutputStream* m_output;
+	std::unique_ptr<google::protobuf::io::CodedInputStream> m_input;
+	std::unique_ptr<google::protobuf::io::CodedOutputStream> m_output;
+	char* m_buffer;
+	uint64_t m_bufferLen;
 };
 
 #endif /* __IO_CONTROLLER_H__ */

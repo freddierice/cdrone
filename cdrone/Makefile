@@ -1,6 +1,6 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++14 -O2
+CXX_FLAGS:=-Wall -std=c++14 -O2 -DSPDLOG_DEBUG_ON
 LIBS:=-lpthread -lssl -lcrypto -lprotobuf
 TARGET:=cdrone
 

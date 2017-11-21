@@ -19,7 +19,7 @@
 // test_infrared writes voltages and distances to stdout.
 void test_infrared(Config &config) {
 	spdlog::get("console")->info("initializing watchdog");
-	Watchdog watchdog(1,0);
+	Watchdog watchdog(std::chrono::seconds(1));
 	
 	spdlog::get("console")->info("initializing infrared");
 	Infrared infrared(config.infraredAlpha(), config.infraredB(), 
@@ -36,7 +36,7 @@ void test_infrared(Config &config) {
 
 void test_multiwii(Config &config) {
 	spdlog::get("console")->info("initializing watchdog");
-	Watchdog watchdog(1,0);
+	Watchdog watchdog(std::chrono::seconds(1));
 
 	spdlog::get("console")->info("initializing serial");
 	Serial serial("/dev/ttyUSB0");
@@ -58,13 +58,13 @@ void test_multiwii(Config &config) {
 
 void test_watchdog(Config &config) {
 	spdlog::get("console")->info("initializing watchdog");
-	Watchdog watchdog(1, 0);
+	Watchdog watchdog(std::chrono::seconds(1));
 
 	spdlog::get("console")->info("performing tasks");
 	watchdog.start();
 	for(int i = 0; i < 25; i++) {
 		watchdog.ok();
-		usleep(100000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	spdlog::get("console")->info("hanging");

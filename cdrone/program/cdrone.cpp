@@ -45,7 +45,12 @@ void do_io(Watchdog &watchdog, Config &config,
 		watchdog.start();
 		while (!shutdown) {
 			proto::Update update;
-			ioController.getMessage(update);
+			try {
+				ioController.getMessage(update);
+			} catch (IOControllerException &ex) {
+				spdlog::get("console")->info("connection closed: {}", ex.what());
+				break;
+			}
 			watchdog.ok();
 			switch (update.mode()) {
 				case proto::UpdateMode::NO_MODE_CHANGE:
@@ -100,10 +105,10 @@ void cdrone(Config &config) {
 
 	// initialize the watchdogs
 	spdlog::get("console")->info("initializing watchdogs");
-	Watchdog updateWatchdog(config.updateWatchdog(), 0);
-	Watchdog ioWatchdog(config.ioWatchdog(), 0);
-	Watchdog analysisWatchdog(config.analysisWatchdog(), 0);
-	Watchdog controllerWatchdog(config.controllerWatchdog(), 0);
+	Watchdog updateWatchdog(config.updateWatchdog());
+	Watchdog ioWatchdog(config.ioWatchdog());
+	Watchdog analysisWatchdog(config.analysisWatchdog());
+	Watchdog controllerWatchdog(config.controllerWatchdog());
 	
 	// initialize the hardware
 	spdlog::get("console")->info("initializing infrared");
