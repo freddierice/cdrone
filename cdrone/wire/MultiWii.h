@@ -21,9 +21,9 @@ public:
 	MultiWii(Serial &serial);
 	~MultiWii();
 
-	bool sendCMD(MultiWiiCMD cmd);
-	bool sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n);
-	bool sendRaw(const void* buffer, int n);
+	void sendCMD(MultiWiiCMD cmd);
+	void sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n);
+	void sendRaw(const void* buffer, int n);
 	
 private:
 	Serial& m_serial;

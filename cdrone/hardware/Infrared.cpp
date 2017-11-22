@@ -1,6 +1,10 @@
 #include "Infrared.h"
 
-Infrared::Infrared(double alpha, double b, double k) : m_adc(), m_alpha(alpha), m_b(b), m_k(k) {
+Infrared::Infrared(Config &config) : 
+	Infrared(config.infraredAlpha(), config.infraredB(), config.infraredK()) {}
+
+Infrared::Infrared(double alpha, double b, double k) : m_adc(), m_alpha(alpha),
+	m_b(b), m_k(k) {
 	// save old default
 	m_defaultConfig = m_adc.getConfig();
 

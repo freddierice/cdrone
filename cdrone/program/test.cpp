@@ -57,17 +57,42 @@ void test_multiwii(Config &config) {
 }
 
 void test_watchdog(Config &config) {
-	spdlog::get("console")->info("initializing watchdog");
-	Watchdog watchdog(std::chrono::seconds(1));
+	auto console = spdlog::get("console");
+	
+	console->info("initializing watchdog1");
+	Watchdog watchdog1(std::chrono::seconds(1));
+	console->info("initializing watchdog2");
+	Watchdog watchdog2(std::chrono::seconds(1));
 
-	spdlog::get("console")->info("performing tasks");
-	watchdog.start();
+	console->info("starting watchdog1");
+	watchdog1.start();
 	for(int i = 0; i < 25; i++) {
-		watchdog.ok();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		watchdog1.ok();
+		std::this_thread::sleep_for(std::chrono::milliseconds(150));
+	}
+	console->info("stopping watchdog1");
+	watchdog1.stop();
+
+	console->info("starting watchdog2");
+	watchdog2.start();
+	for (int i = 0; i < 25; i++) {
+		watchdog2.ok();
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 
-	spdlog::get("console")->info("hanging");
+	console->info("starting watchdog1 again");
+	watchdog1.start();
+	for (int i = 0; i < 25; i++) {
+		watchdog1.ok();
+		std::this_thread::sleep_for(std::chrono::milliseconds(150));
+		watchdog2.ok();
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+	}
+
+	console->info("stopping watchdog1");
+	watchdog1.stop();
+
+	console->info("hanging on watchdog2");
 	while (true) {}
 }
 

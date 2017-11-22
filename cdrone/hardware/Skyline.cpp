@@ -5,20 +5,22 @@
 Skyline::Skyline(Serial &serial) : m_multiwii(serial) {}
 Skyline::~Skyline() {}
 
-bool Skyline::sendArm() {
-	return m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, 
+void Skyline::sendArm() {
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, 
 			(const void*)CMD_ARM, 19);
 }
 
-bool Skyline::sendDisarm() {
-	return m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, 
-			(const void*)CMD_DISARM, 19);
+void Skyline::sendDisarm() {
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC,
+		(const void*)CMD_DISARM, 19);
 }
 
-bool Skyline::calibrate() {
-	if (!m_multiwii.sendCMD(MultiWiiCMD::MSP_ACC_CALIBRATION))
-		return false;
-	return true;
+void Skyline::sendCalibrate() {
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_ACC_CALIBRATION);
+}
+
+void Skyline::update() {
+	
 }
 
 // constants

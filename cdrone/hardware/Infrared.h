@@ -2,6 +2,7 @@
 #define __INFRARED_H__
 
 #include "hardware/ADS1115.h"
+#include "misc/Config.h"
 
 #include <atomic>
 #include <inttypes.h>
@@ -9,6 +10,7 @@
 class Infrared {
 public:
 	Infrared();
+	Infrared(Config &config);
 	Infrared(double alpha, double b, double k);
 	~Infrared();
 

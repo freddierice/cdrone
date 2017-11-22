@@ -14,11 +14,11 @@ MultiWii::~MultiWii() {
 	delete m_recv;
 }
 
-bool MultiWii::sendCMD(MultiWiiCMD cmd) {
-	return sendCMD(cmd, NULL, 0);
+void MultiWii::sendCMD(MultiWiiCMD cmd) {
+	sendCMD(cmd, NULL, 0);
 }
 
-bool MultiWii::sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n) {
+void MultiWii::sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n) {
 	m_send[3] = (char)n;
 	m_send[4] = (char)cmd;
 	if (n) ::memcpy(m_send+5, buf, n);
@@ -29,6 +29,7 @@ bool MultiWii::sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n) {
 	return m_serial.writeFull(m_send, n+6);
 }
 
-bool MultiWii::sendRaw(const void *buffer, int n) {
-	return m_serial.writeFull(buffer, n);
+void MultiWii::sendRaw(const void *buffer, int n) {
+	m_serial.writeFull(buffer, n);
 }
+

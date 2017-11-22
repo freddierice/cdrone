@@ -113,8 +113,7 @@ void cdrone(Config &config) {
 	// initialize the hardware
 	spdlog::get("console")->info("initializing infrared");
 	FlightController flightController(config);
-	Infrared infrared(config.infraredAlpha(), config.infraredB(), 
-			config.infraredK());
+	Infrared infrared(config);
 
 	// create threads
 	spdlog::get("console")->info("creating threads");

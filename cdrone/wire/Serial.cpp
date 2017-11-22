@@ -8,63 +8,60 @@
 #include <fcntl.h>
 #include <termios.h>
 
+#include <spdlog/spdlog.h>
+
 Serial::Serial(const std::string& filename) : m_filename(filename) {
 	m_fd = serialOpen(filename);
 }
 
-bool Serial::readFull(void *buf, int n) {
+void Serial::readFull(void *buf, int n) {
 	int num_read;
 	if (::ioctl(m_fd, FIONREAD, &num_read)) {
-		std::cerr << "could not ioctl tty" << std::endl;
+		spdlog::get("console")->warn("could not ioctl tty");
 
 		// try to recover
 		::close(m_fd);
 		serialOpen(m_filename);
 		if (::ioctl(m_fd, FIONREAD, &num_read)) {
-			throw SerialException();
+			throw SerialException("error getting unread buffer");
 		}
 	}
 
 	if (num_read < n)
-		return false;
+		throw SerialException("could not read full n bytes");
 
 	if ((num_read = read(m_fd, buf, n)) != n) {
 		// TODO: handle interrupts.
-		std::cerr << "wrong number of bytes read. expected " << n << " got " << 
-			num_read << std::endl;
-		throw SerialException();
+		spdlog::get("console")->error(
+				"wrong number of bytes read. expected {} got {}", n, num_read);
+		throw SerialException("wrong number of bytes read");
 	}
-
-	return true;
 }
 
-bool Serial::writeFull(const void *buf, int n) {
+void Serial::writeFull(const void *buf, int n) {
 	int total;
 	if ((total = write(m_fd, buf, n)) != n) {
-		if (total == -1) {
-			std::cerr << "error writing" << std::endl;
-			throw SerialException();
-		}
+		if (total == -1)
+			throw SerialException("error writing");
 		// TODO: handle interrupts.
-		std::cerr << "wrong number of bytes read. expected " << n << " got " << 
-			total << std::endl;
-		throw SerialException();
+		spdlog::get("console")->error(
+				"wrong number of bytes written. expected {} got {}", n, total);
+		throw SerialException("wrong number of bytes written");
 	}
 
 	// flush written to m_fd to the wire.
 	tcflush(m_fd, TCOFLUSH);
-	return true;
 }
 
 int Serial::serialOpen(const std::string& filename) {
 	struct termios tty;
 	int fd;
 	if ((fd = ::open(filename.c_str(), O_RDWR | O_NOCTTY | O_SYNC)) == -1) {
-		throw SerialException();
+		throw SerialException("could not open the serial port");
 	}
 
 	if (tcgetattr(fd, &tty)) {
-		throw SerialException();
+		throw SerialException("could not get tc attributes");
 	}
 
 	cfmakeraw(&tty);
@@ -80,7 +77,7 @@ int Serial::serialOpen(const std::string& filename) {
 	tty.c_cc[VTIME] = 3; 
 
 	if (tcsetattr (fd, TCSANOW, &tty) != 0) {
-		throw SerialException();
+		throw SerialException("could not set tc attributes");
 	}
 
 	return fd;

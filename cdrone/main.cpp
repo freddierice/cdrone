@@ -12,6 +12,7 @@
 
 #include "controller/Watchdog.h"
 #include "misc/Config.h"
+#include "misc/exception.h"
 #include "program/cdrone.h"
 #include "program/test.h"
 	
@@ -83,5 +84,7 @@ int main(int argc, const char *argv[]) try {
 	std::cerr << "could not parse config file:" << std::endl << ex.what() <<
 		std::endl;
 	return 1;
+} catch (CDroneException& ex) {
+	std::cerr << "unhandled exception: " << std::endl << ex.what() << std::endl;
+	return 1;
 }
-

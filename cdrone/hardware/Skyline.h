@@ -8,16 +8,27 @@
 
 class Skyline {
 public:
+	// create a skyline with a serial interface.
 	Skyline(Serial &serial);
 	~Skyline();
 
-	bool sendArm();
-	bool sendDisarm();
-	bool calibrate();
+	// sendArm sends a single arm command to the skyline.
+	void sendArm();
+
+	// sendCalibrate sends a single calibrate command to the skyline.
+	void sendCalibrate();
+
+	// sendDisarm sends a single disarm command to the skyline.
+	void sendDisarm();
+
+	// update reads responses from the wire and sets flags.
+	void update();
 	
 	static const unsigned char CMD_ARM[];
 	static const unsigned char CMD_DISARM[];
 private:
+	// a multiwii protocol parser for understanding messages that go from the
+	// skyline to me.
 	MultiWii m_multiwii;
 };
 

@@ -4,7 +4,8 @@
 
 #include <stdexcept>
 
-FlightController::FlightController(Config &config) {
+FlightController::FlightController(Config &config) : 
+	m_lastModeChange(std::chrono::high_resolution_clock::now()) {
 	Serial skylineSerial(config.skylinePort());
 	m_skyline = std::make_unique<Skyline>(skylineSerial);
 	m_mode = Disarmed;
@@ -17,7 +18,6 @@ FlightMode FlightController::getMode() {
 void FlightController::arm() {
 	if (getMode() == Disarmed)
 		setMode(Arming);
-
 }
 
 void FlightController::disarm() {
@@ -28,7 +28,12 @@ void FlightController::disarm() {
 
 bool FlightController::calibrate() {
 	// TODO: set mode to calibrate
-	m_skyline->calibrate();
+	if (m_mode != Disarmed) {
+		spdlog::get("console")->warn("could not calibrate, in mode {}", m_mode);
+		return false;
+	}
+	m_mode = Calibrating;
+	m_skyline->sendCalibrate();
 	return true;
 }
 
@@ -40,6 +45,9 @@ void FlightController::update() {
 			break;
 		case FlightMode::Disarming:
 			// send a disarm signal to the multiwii board.
+			m_skyline->sendDisarm();
+			// check if enough time has passed
+			//
 			break;
 		case FlightMode::Arming:
 			break;
@@ -58,9 +66,7 @@ void FlightController::update() {
 }
 
 void FlightController::setMode(FlightMode mode) {
-	struct timespec ts;
-	::clock_gettime(CLOCK_REALTIME, &ts);
-	m_timeSinceModeChange = ts;
+	m_lastModeChange = std::chrono::high_resolution_clock::now();
 	SPDLOG_DEBUG(spdlog::get("console"), "MODE CHANGED FROM {} to {}", m_mode, mode);
 	m_mode = mode;
 }
