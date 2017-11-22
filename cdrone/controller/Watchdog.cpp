@@ -20,10 +20,17 @@ Watchdog::Watchdog() {
 }
 
 void Watchdog::initialize(int n) {
+	spdlog::get("console")->info("Watchdog::initialize");
 	m_nextThreadID = 0;
 	m_nWatchdogs = n;
-	if (m_counts) delete m_counts;
-	if (m_maxes) delete m_maxes;
+	if (m_counts) {
+		delete m_counts;
+		m_counts = NULL;
+	}
+	if (m_maxes) {
+		delete m_maxes;
+		m_maxes = NULL;
+	}
 	m_counts = new std::atomic<uint64_t>[n]();
 	m_maxes = new uint64_t[n]();
 	m_shutdown = false;
@@ -74,7 +81,7 @@ void Watchdog::check_thread() {
 }
 
 void Watchdog::start() {
-	m_counts = 0;
+	m_counts[m_id] = 0;
 	m_maxes[m_id] = (uint64_t)(m_duration.count() + EPOCH.count() - 1) / (EPOCH.count());	
 }
 

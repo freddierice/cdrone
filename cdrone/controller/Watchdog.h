@@ -49,7 +49,7 @@ private:
 
 	static uint64_t m_nWatchdogs;
 	static std::atomic<uint64_t> m_nextThreadID;
-	static std::atomic<uint64_t>* m_counts;
+	static std::atomic<uint64_t> *m_counts;
 	static uint64_t* m_maxes;
 	static std::thread m_thread;
 	static std::atomic<bool> m_shutdown;
