@@ -1,7 +1,7 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++14 -O2 -DSPDLOG_DEBUG_ON
-LIBS:=-lpthread -lssl -lcrypto -lprotobuf
+CXX_FLAGS:=-Wall -std=c++14 -DSPDLOG_DEBUG_ON -Og -g # -O2
+LIBS:=-lpthread -lssl -lcrypto -lprotobuf -latomic -lbcm_host -lmmal -lmmal_core # -lmmal_components
 TARGET:=cdrone
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))

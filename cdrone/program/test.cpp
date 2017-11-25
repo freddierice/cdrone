@@ -49,10 +49,13 @@ void test_multiwii(Config &config) {
 	while (!shutdown) {
 		watchdog.ok();
 		char b;
+		// TODO: uncomment
+		/*
 		if (serial.readFull(&b, 1)) {
 			std::cout << b;
 			std::cout.flush();
 		}
+		*/
 	}
 }
 

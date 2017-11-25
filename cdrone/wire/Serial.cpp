@@ -14,33 +14,49 @@ Serial::Serial(const std::string& filename) : m_filename(filename) {
 	m_fd = serialOpen(filename);
 }
 
-void Serial::readFull(void *buf, int n) {
-	int num_read;
-	if (::ioctl(m_fd, FIONREAD, &num_read)) {
+int Serial::read(void* buf, int n) {
+	int ret = ::read(m_fd, buf, n);
+	if (ret < 0) 
+		throw Serial("could not read");
+	return ret;
+}
+
+int Serial::write(const void* buf, int n) {
+	int ret = ::write(m_fd, buf, n);
+	if (ret < 0) 
+		throw Serial("could not write");
+	return ret;
+}
+
+bool Serial::readFull(void *buf, int n) {
+	int nRead;
+	if (::ioctl(m_fd, FIONREAD, &nRead)) {
 		spdlog::get("console")->warn("could not ioctl tty");
 
 		// try to recover
 		::close(m_fd);
 		serialOpen(m_filename);
-		if (::ioctl(m_fd, FIONREAD, &num_read)) {
+		if (::ioctl(m_fd, FIONREAD, &nRead)) {
 			throw SerialException("error getting unread buffer");
 		}
 	}
 
-	if (num_read < n)
-		throw SerialException("could not read full n bytes");
+	if (nRead < n)
+		return false;
 
-	if ((num_read = read(m_fd, buf, n)) != n) {
+	if ((nRead = ::read(m_fd, buf, n)) != n) {
 		// TODO: handle interrupts.
 		spdlog::get("console")->error(
-				"wrong number of bytes read. expected {} got {}", n, num_read);
+				"wrong number of bytes read. expected {} got {}", n, nRead);
 		throw SerialException("wrong number of bytes read");
 	}
+
+	return true;
 }
 
 void Serial::writeFull(const void *buf, int n) {
 	int total;
-	if ((total = write(m_fd, buf, n)) != n) {
+	if ((total = ::write(m_fd, buf, n)) != n) {
 		if (total == -1)
 			throw SerialException("error writing");
 		// TODO: handle interrupts.

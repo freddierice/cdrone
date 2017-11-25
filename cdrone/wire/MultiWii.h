@@ -16,19 +16,29 @@ enum MultiWiiCMD {
 	MSP_MAG_CALIBRATION = 206
 };
 
+class MultiWiiResponse {
+public:
+	MultiWiiCMD m_type;
+	char m_data[256];
+	int m_dataLen;
+};
+
 class MultiWii {
 public:
-	MultiWii(Serial &serial);
+	MultiWii(Serial& serial);
 	~MultiWii();
 
 	void sendCMD(MultiWiiCMD cmd);
 	void sendCMD(MultiWiiCMD cmd, const void* buf, uint8_t n);
 	void sendRaw(const void* buffer, int n);
+
+	bool recv(MultiWiiResponse& response);
 	
 private:
 	Serial& m_serial;
 	char* m_send;
 	char* m_recv;
+	int m_idx;
 };
 
 #endif /* __MULTI_WII_H__ */

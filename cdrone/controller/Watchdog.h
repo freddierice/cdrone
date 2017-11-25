@@ -3,7 +3,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
-#include <mutex>
 
 #include <spdlog/spdlog.h>
 
@@ -30,13 +29,6 @@ public:
 	// stop stops the watchdog timer.
 	void stop();
 private:
-	/* 
-	static void kill(int) {
-		spdlog::get("console")->error("watchdog killed program");
-		std::exit(1);
-	}
-	*/
-
 	// no construction without registration
 	Watchdog();
 	

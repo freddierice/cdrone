@@ -28,6 +28,7 @@ public:
 	const uint16_t& port() const { return m_port; }
 	const bool ssl() const { return m_ssl; }
 	const std::string& skylinePort() const { return m_skylinePort; }
+	const std::string& cameraPort() const { return m_cameraPort; }
 private:
 	Json::Value m_root;
 	
@@ -44,6 +45,7 @@ private:
 	uint16_t m_port;
 	bool m_ssl;
 	std::string m_skylinePort;
+	std::string m_cameraPort;
 };
 
 #endif /* __CONFIG_H__ */

@@ -12,9 +12,15 @@ public:
 	// open a serial port with the filesystem node.
 	Serial(const std::string& filename);
 
+	// read will try to read at least n characters from the line.
+	int read(void* buf, int n);
+
+	// write will try to write all the characters
+	int write(const void* buf, int n);
+
 	// read full n characters from the line. if n bytes are not read, the
 	// function throws a SerialException.
-	void readFull(void* buf, int n);
+	bool readFull(void* buf, int n);
 	
 	// writeFull writes a full n characters. If n characters are not read, the
 	// function will throw a SerialException.

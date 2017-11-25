@@ -32,6 +32,7 @@ Config::Config(const std::string &filename) {
 		m_port = (uint16_t) port;
 		m_ssl = m_root.get("ssl", false).asBool();
 		m_skylinePort = m_root.get("skylinePort", "/dev/ttyUSB0").asString();
+		m_cameraPort = m_root.get("cameraPort", "/dev/nyi").asString();
 	} catch(Json::RuntimeError &e) {
 		throw ConfigException(e.what());
 	}
