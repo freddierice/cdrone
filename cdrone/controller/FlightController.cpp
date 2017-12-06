@@ -4,10 +4,17 @@
 
 #include <stdexcept>
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+	    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+
 FlightController::FlightController(Config &config) : 
 	m_lastModeChange(std::chrono::high_resolution_clock::now()) {
 	Serial skylineSerial(config.skylinePort());
-	m_skyline = std::make_unique<Skyline>(skylineSerial);
+	m_skyline = make_unique<Skyline>(skylineSerial);
 	m_mode = Disarmed;
 }
 

@@ -10,6 +10,7 @@
 
 #include "main.h"
 #include "controller/Watchdog.h"
+#include "hardware/Camera.h"
 #include "hardware/Infrared.h"
 #include "misc/Config.h"
 #include "wire/MultiWii.h"
@@ -48,9 +49,9 @@ void test_multiwii(Config &config) {
 	m.sendCMD(MultiWiiCMD::MSP_STATUS);
 	while (!shutdown) {
 		watchdog.ok();
-		char b;
 		// TODO: uncomment
 		/*
+		char b;
 		if (serial.readFull(&b, 1)) {
 			std::cout << b;
 			std::cout.flush();
@@ -114,4 +115,23 @@ void test_ssl(Config &config) try {
 
 } catch(ServerException &ex) {
 	spdlog::get("console")->error("could not start server: {}", ex.what());
+}
+
+void test_camera(Config &config) {
+	auto console = spdlog::get("console");
+	try {
+		Camera camera(config);
+		camera.start();
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		camera.enablePosition();
+		while (!shutdown) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			double x = camera.m_x_motion;
+			double y = camera.m_y_motion;
+			console->info("motion: {}, {}", x, y);
+		}
+		camera.stop();
+	} catch (HardwareException &ex) {
+		spdlog::get("console")->error("error with camera: {}", ex.what());
+	}
 }

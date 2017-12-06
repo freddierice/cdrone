@@ -38,6 +38,8 @@ void setup_watchdog() {
 
 // main program
 int main(int argc, const char *argv[]) try {
+	int ret = 0;
+
 	setup_loggers();
 
 	Config config("cdrone.conf");
@@ -61,25 +63,26 @@ int main(int argc, const char *argv[]) try {
 		
 		} else if (!strcmp(program, "ssl")) {
 			test_ssl(config);
+		} else if (!strcmp(program, "camera")) {
+			test_camera(config);
 		} else {
 			spdlog::get("console")->error("{} is not a valid program", program);
-			return 1;
+			ret = 1;
 		}
+	} else {
 
-		return 0;
+		// the main event
+		spdlog::get("console")->info("starting cdrone");
+		cdrone(config);
 	}
-
-	// the main event
-	spdlog::get("console")->info("starting cdrone");
-	cdrone(config);
 
 	spdlog::get("console")->info("joining with Watchdog lib");
 	Watchdog::destroy();
 
-	// close the loggers
+	spdlog::get("console")->info("closing all loggers");
 	spdlog::drop_all();
 
-	return 0;
+	return ret;
 } catch (ConfigException& ex) {
 	std::cerr << "could not parse config file:" << std::endl << ex.what() <<
 		std::endl;

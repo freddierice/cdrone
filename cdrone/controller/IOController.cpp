@@ -1,10 +1,16 @@
 #include "controller/IOController.h"
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 IOController::IOController(Config &config) : 
 	m_server(config) {
 	auto zeroCopyStreams = m_server.accept();
-	m_input = std::make_unique<google::protobuf::io::CodedInputStream>(zeroCopyStreams.first);
-	m_output = std::make_unique<google::protobuf::io::CodedOutputStream>(zeroCopyStreams.second);
+	m_input = make_unique<google::protobuf::io::CodedInputStream>(zeroCopyStreams.first);
+	m_output = make_unique<google::protobuf::io::CodedOutputStream>(zeroCopyStreams.second);
 	m_bufferLen = 4096;
 	m_buffer = new char[m_bufferLen]();
 }
