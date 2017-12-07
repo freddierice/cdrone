@@ -105,25 +105,27 @@ func New(config Config) (*Base, error) {
 	}
 
 	// start the heartbeats for the life of this base.
-	messageChan := make(chan protobuf.Message, 5)
+	messageChan := make(chan protobuf.Message, 10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	defer func() {
 		go func() {
+			defer wg.Done()
 			for pb := range messageChan {
-				base.SendMessage(pb)
+				if err := base.SendMessage(pb); err != nil {
+					fmt.Printf("error sending message: %v\n", err)
+				}
 			}
-			wg.Done()
 		}()
 		go func() {
+			defer wg.Done()
+			defer close(messageChan)
 			for !base.stop {
 				time.Sleep(time.Second)
 				messageChan <- &proto.Update{
 					Mode: proto.UpdateMode_NO_MODE_CHANGE,
 				}
 			}
-			close(messageChan)
-			wg.Done()
 		}()
 	}()
 

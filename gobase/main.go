@@ -3,85 +3,101 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"./base"
+	termbox "github.com/nsf/termbox-go"
 )
 
-func startBase() {
+func main() {
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termbox.Close()
+
+	termbox.SetInputMode(termbox.InputAlt)
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	termbox.Flush()
+
+	// print out the instructions
+	fmt.Println("INSTRUCTIONS")
+	fmt.Println("; - arm")
+	fmt.Println("[spacebar] - disarm")
+	fmt.Println("t - takeoff")
+	fmt.Println("a - yaw left")
+	fmt.Println("d - yaw right")
+	fmt.Println("w - up")
+	fmt.Println("s - down")
+	fmt.Println("j - left")
+	fmt.Println("l - right")
+	fmt.Println("i - forward")
+	fmt.Println("k - backward")
+	fmt.Println("h - hover")
+	fmt.Println("r - reset the image used for position hold")
+	fmt.Println("p - toggle position mode")
+
+	// initialize the base
 	baseConfig, err := base.ParseConfig("gobase.conf")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not parse gobase.conf: %v", err)
 		os.Exit(1)
 	}
 
-	base, err := base.New(*baseConfig)
+	b, err := base.New(*baseConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not create base: %v", err)
 		os.Exit(1)
 	}
+	defer b.Close()
 
-	// wait a bit
-	time.Sleep(10 * time.Second)
+	// initialize some variables
+	roll := uint32(1500)
+	pitch := uint32(1500)
+	yaw := uint32(1500)
+	throttle := uint32(1000)
 
-	fmt.Println("shutting down.")
-	base.Close()
+	// loop over the base
+Done:
+	for {
+		switch ev := termbox.PollEvent(); ev.Type {
+		case termbox.EventKey:
+			if ev.Ch == 'q' {
+				fmt.Println("shutting down")
+				break Done
+			} else if ev.Ch == ';' {
+				b.Arm()
+			} else if ev.Key == termbox.KeySpace {
+				b.Disarm()
+			} else if ev.Ch == 't' {
+				b.Takeoff()
+			} else if ev.Ch == 'p' {
+				b.Position()
+			} else if ev.Ch == 'r' {
+				b.ResetPosition()
+			} else if ev.Ch == 'w' {
+				pitch = 1400
+				b.SetVelocity(roll, pitch, yaw, throttle)
+			} else if ev.Ch == 'a' {
+				roll = 1600
+				b.SetVelocity(roll, pitch, yaw, throttle)
+			} else if ev.Ch == 's' {
+				pitch = 1600
+				b.SetVelocity(roll, pitch, yaw, throttle)
+			} else if ev.Ch == 'd' {
+				roll = 1400
+				b.SetVelocity(roll, pitch, yaw, throttle)
+			} else if ev.Ch == 'h' {
+				roll = 1500
+				pitch = 1500
+				yaw = 1500
+				b.SetVelocity(roll, pitch, yaw, throttle)
+			} else if ev.Ch == 'i' {
+			} else if ev.Ch == 'j' {
+			} else if ev.Ch == 'k' {
+			} else if ev.Ch == 'l' {
+
+			}
+		}
+	}
+
 }
-
-func main() {
-	/*
-		// create application
-		app := widgets.NewQApplication(len(os.Args), os.Args)
-
-		// main window
-		window := widgets.NewQMainWindow(nil, 0)
-		window.SetWindowTitle("gobase")
-		window.SetMinimumSize2(200, 200)
-
-		// Start the app
-		app.Exec()
-	*/
-
-	startBase()
-}
-
-/*
-	// Create application
-	app := widgets.NewQApplication(len(os.Args), os.Args)
-
-	// Create main window
-	window := widgets.NewQMainWindow(nil, 0)
-	window.SetWindowTitle("Hello World Example")
-	window.SetMinimumSize2(200, 200)
-
-	// Create main layout
-	layout := widgets.NewQVBoxLayout()
-
-	// Create main widget and set the layout
-	mainWidget := widgets.NewQWidget(nil, 0)
-	mainWidget.SetLayout(layout)
-
-	// Create a line edit and add it to the layout
-	input := widgets.NewQLineEdit(nil)
-	input.SetPlaceholderText("1. write something")
-	layout.AddWidget(input, 0, 0)
-
-	// Create a button and add it to the layout
-	button := widgets.NewQPushButton2("2. click me", nil)
-	layout.AddWidget(button, 0, 0)
-
-	// Connect event for button
-	button.ConnectClicked(func(checked bool) {
-		widgets.QMessageBox_Information(nil, "OK", input.Text(),
-		widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-	})
-
-	// Set main widget as the central widget of the window
-	window.SetCentralWidget(mainWidget)
-
-	// Show the window
-	window.Show()
-
-	// Execute app
-	app.Exec()
-*/
