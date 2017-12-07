@@ -32,7 +32,16 @@ Config::Config(const std::string &filename) {
 		m_port = (uint16_t) port;
 		m_ssl = m_root.get("ssl", false).asBool();
 		m_skylinePort = m_root.get("skylinePort", "/dev/ttyUSB0").asString();
-		m_cameraPort = m_root.get("cameraPort", "/dev/nyi").asString();
+		m_cameraPort = m_root.get("cameraPort", 0).asInt();
+		m_rollPIDP = m_root.get("rollPIDP", 0.0).asDouble();
+		m_rollPIDI = m_root.get("rollPIDI", 0.0).asDouble();
+		m_rollPIDD = m_root.get("rollPIDD", 0.0).asDouble();
+		m_pitchPIDP = m_root.get("pitchPIDP", 0.0).asDouble();
+		m_pitchPIDI = m_root.get("pitchPIDI", 0.0).asDouble();
+		m_pitchPIDD = m_root.get("pitchPIDD", 0.0).asDouble();
+		m_throttlePIDP = m_root.get("throttlePIDP", 0.0).asDouble();
+		m_throttlePIDI = m_root.get("throttlePIDI", 0.0).asDouble();
+		m_throttlePIDD = m_root.get("throttlePIDD", 0.0).asDouble();
 	} catch(Json::RuntimeError &e) {
 		throw ConfigException(e.what());
 	}

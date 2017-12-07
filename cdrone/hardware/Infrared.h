@@ -1,23 +1,23 @@
 #ifndef __INFRARED_H__
 #define __INFRARED_H__
 
-#include "hardware/ADS1115.h"
-#include "misc/Config.h"
-
 #include <atomic>
 #include <inttypes.h>
+#include <memory>
+
+#include "hardware/ADS1115.h"
+#include "misc/Config.h"
+#include "misc/Observations.h"
 
 class Infrared {
 public:
 	Infrared();
-	Infrared(Config &config);
+	Infrared(Config &config, std::shared_ptr<Observations> obs);
 	Infrared(double alpha, double b, double k);
+	Infrared(double alpha, double b, double k, std::shared_ptr<Observations> obs);
 	~Infrared();
 
 	void update();
-
-	double distance();
-	uint16_t voltage();
 
 private:
 	ADS1115 m_adc;
@@ -26,9 +26,8 @@ private:
 	double m_b;
 	double m_k;
 	
-	// atomic for variables 
-	std::atomic<double> m_distance;
-	std::atomic<uint16_t> m_voltage;
+	// observations
+	std::shared_ptr<Observations> m_obs;
 	
 	static const uint16_t MIN_READING;
 };

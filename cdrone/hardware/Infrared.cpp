@@ -1,10 +1,15 @@
 #include "Infrared.h"
 
-Infrared::Infrared(Config &config) : 
-	Infrared(config.infraredAlpha(), config.infraredB(), config.infraredK()) {}
+Infrared::Infrared(Config &config, std::shared_ptr<Observations> obs) : 
+	Infrared(config.infraredAlpha(), config.infraredB(), config.infraredK(), obs) {}
 
-Infrared::Infrared(double alpha, double b, double k) : m_adc(), m_alpha(alpha),
-	m_b(b), m_k(k) {
+Infrared::Infrared(double alpha, double b, double k) : 
+	Infrared(alpha, b, k, std::make_shared<Observations>()) {}
+
+Infrared::Infrared(double alpha, double b, double k,
+		std::shared_ptr<Observations> obs) : m_adc(), m_alpha(alpha),
+	m_b(b), m_k(k), m_obs(obs) {
+
 	// save old default
 	m_defaultConfig = m_adc.getConfig();
 
@@ -19,21 +24,12 @@ Infrared::Infrared(double alpha, double b, double k) : m_adc(), m_alpha(alpha),
 			ADS1115::Config::CQUE_NONE);
 
 	// get in the ballpark before launching the smoothed infrared.
-	update();
-	m_distance = m_k/(double)m_voltage + m_b;
+	update(); update(); update(); update(); update(); update();
 }
 Infrared::Infrared() : Infrared(0,1,0) {}
 
 Infrared::~Infrared() {
 	m_adc.setConfig(m_defaultConfig);
-}
-
-double Infrared::distance() {
-	return m_distance.load(std::memory_order_acquire);
-}
-
-uint16_t Infrared::voltage() {
-	return m_voltage.load(std::memory_order_acquire);
 }
 
 void Infrared::update() {
@@ -52,12 +48,12 @@ void Infrared::update() {
 	newDistance = m_k/(double)newVoltage + m_b;
 
 	// do smoothed distance
-	oldDistance = m_distance.load(std::memory_order_acquire);
+	oldDistance = m_obs->infraredHeight;
 	newDistance = (1-m_alpha)*oldDistance + m_alpha*newDistance;
 
 	// update the atomics
-	m_distance.store(newDistance, std::memory_order_relaxed);
-	m_voltage.store(newVoltage, std::memory_order_release);
+	m_obs->infraredHeight = newDistance;
+	m_obs->infraredVoltage = newVoltage;
 }
 
 const uint16_t Infrared::MIN_READING = 2000;

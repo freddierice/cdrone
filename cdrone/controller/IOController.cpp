@@ -7,15 +7,22 @@ std::unique_ptr<T> make_unique(Args&&... args)
 }
 
 IOController::IOController(Config &config) : 
-	m_server(config) {
-	auto zeroCopyStreams = m_server.accept();
-	m_input = make_unique<google::protobuf::io::CodedInputStream>(zeroCopyStreams.first);
-	m_output = make_unique<google::protobuf::io::CodedOutputStream>(zeroCopyStreams.second);
-	m_bufferLen = 4096;
+	m_server(config), m_bufferLen(4096), m_connected(false) {
 	m_buffer = new char[m_bufferLen]();
 }
 
 IOController::~IOController() {}
+
+void IOController::accept() {
+	auto zeroCopyStreams = m_server.accept();
+	m_input = make_unique<google::protobuf::io::CodedInputStream>(zeroCopyStreams.first);
+	m_output = make_unique<google::protobuf::io::CodedOutputStream>(zeroCopyStreams.second);
+	m_connected = true;
+}
+
+bool IOController::connected() {
+	return m_connected;
+}
 
 void IOController::getMessage(google::protobuf::Message &message) {
 	// message.ParseFromZeroCopyStream(m_input);
@@ -30,7 +37,7 @@ void IOController::getMessage(google::protobuf::Message &message) {
 	if (!m_input->GetDirectBufferPointer(&data, &size))
 		throw IOControllerException("could not read in GetDirectBufferPointer");
 	if ((uint64_t)size >= n) {
-		if (message.ParseFromArray(data, size))
+		if (!message.ParseFromArray(data, n))
 			throw IOControllerException("could not read in ParseFromArray");
 		m_input->Skip(n);
 		return;
@@ -45,6 +52,6 @@ void IOController::getMessage(google::protobuf::Message &message) {
 
 	if (!m_input->ReadRaw(m_buffer, n))
 		throw IOControllerException("could not read in ReadRaw");
-	if (message.ParseFromArray(m_buffer, n)) 
+	if (!message.ParseFromArray(m_buffer, n)) 
 		throw IOControllerException("could not read in ParseFromArray");
 }

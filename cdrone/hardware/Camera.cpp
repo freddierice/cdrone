@@ -23,12 +23,12 @@
 #define SPLITTER_ENCODER_PORT 1
 
 
-Camera::Camera() : Camera("/dev/nyi") {}
-Camera::Camera(Config &config) : Camera(config.cameraPort()) {}
-Camera::Camera(const std::string& filename) : m_x_motion(0.0), m_y_motion(0.0),
-	m_x_position(0.0), m_y_position(0.0), m_yaw_position(0.0),
-   	m_width(320), m_height(240), m_framerate(90), m_running(false), 
-	m_positionEnabled(false), m_hasFirstFrame(false) {
+Camera::Camera() : Camera(0, std::make_shared<Observations>()) {}
+Camera::Camera(Config &config, std::shared_ptr<Observations> obs) : 
+	Camera(config.cameraPort(), obs) {}
+Camera::Camera(int port, std::shared_ptr<Observations> obs) :
+   	m_port(port), m_width(320), m_height(240), m_framerate(90), m_obs(obs),
+	m_running(false), m_positionEnabled(false), m_hasFirstFrame(false) {
 
 	MMAL_PARAMETER_INT32_T cameraNum;
 	MMAL_PORT_T *preview_port, *video_port, *still_port;
@@ -56,7 +56,7 @@ Camera::Camera(const std::string& filename) : m_x_motion(0.0), m_y_motion(0.0),
 		throw CameraException("could not create camera component");
 	cameraNum.hdr.id = MMAL_PARAMETER_CAMERA_NUM;
 	cameraNum.hdr.size = sizeof(cameraNum);
-	cameraNum.value = 0;
+	cameraNum.value = m_port;
 	status = mmal_port_parameter_set(m_camera->control, &cameraNum.hdr);
 	if (status != MMAL_SUCCESS)
 		throw CameraException("could not set camera to port");
@@ -332,36 +332,45 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 			x_motion += block->x;
 			y_motion += block->y;
 		}
-		// ::write(2, buffer->data, buffer->length);
 		mmal_buffer_header_mem_unlock(buffer);
 
+		// normalize the motion and use lazy motion blur
 		x_motion /= -camera->m_blocks;
 		y_motion /= camera->m_blocks;
-		camera->m_x_motion = x_motion;
-		camera->m_y_motion = y_motion;
+		x_motion *= 0.025;
+		y_motion *= 0.025;
+		x_motion -= tan(camera->m_obs->skylineAngRollVel/30.0);
+		y_motion -= tan(camera->m_obs->skylineAngPitchVel/30.0);
+		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraXMotion;
+		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraYMotion;
+
+		// set new motion
+		camera->m_obs->cameraXMotion = x_motion;
+		camera->m_obs->cameraYMotion = y_motion;
 	}
 	mmal_buffer_header_release(buffer);
 
 	if (port->is_enabled) {
 		buffer = mmal_queue_get(camera->m_encoderPool->queue);
 		if (!buffer) {
-		   spdlog::get("console")->warn("no buffer");
+		   // spdlog::get("console")->warn("no buffer");
 		   return;
 		}
-		if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
-			spdlog::get("console")->info("could not send buffer to encoder");
+		mmal_port_send_buffer(port, buffer);
+			// spdlog::get("console")->info("could not send buffer to encoder");
 	}
 }
 
 void Camera::resetPosition() {
 	m_hasFirstFrame = false;
-	m_x_position = 0.0;
-	m_y_position = 0.0;
-	m_yaw_position = 0.0;
+	m_obs->cameraXPosition = 0.0;
+	m_obs->cameraYPosition = 0.0;
+	m_obs->cameraYawPosition = 0.0;
 }
 
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
+	double x, y;
 
 	// TODO: speed up by swapping frame buffers.
 
@@ -390,19 +399,21 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		cv::Mat estimate = cv::estimateRigidTransform(camera->m_firstFrame, 
 				camera->m_currentFrame, false);
 		if (!estimate.empty()) {
-			// get the positions from the estimate
-			double newX, newY, newYaw;
-			// newX = -1.0 * estimate.at(0,2) * 
 
-			// update position
-			// camera->m_x_position = ALPHA *  
+			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
+			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+			camera->m_obs->cameraXPosition = x*ALPHA + camera->m_obs->cameraXPosition*(1.0-ALPHA);
+			camera->m_obs->cameraYPosition = y*ALPHA + camera->m_obs->cameraYPosition*(1.0-ALPHA);
 			goto done;
 		}
-			estimate = cv::estimateRigidTransform(camera->m_previousFrame,
-					camera->m_currentFrame, false);
-		}else{
-			
-		}
+
+		// we could not compare to first frame, lets now compare to previous
+		estimate = cv::estimateRigidTransform(camera->m_previousFrame,
+				camera->m_currentFrame, false);
+		x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
+		y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+		camera->m_obs->cameraXPosition = camera->m_obs->cameraXPosition + x;
+		camera->m_obs->cameraYPosition = camera->m_obs->cameraYPosition + y;
 
 		// copy current frame to the previous
 		::memcpy(camera->m_previousFrameBuffer, camera->m_currentFrameBuffer, camera->m_frameBufferLength);
@@ -619,3 +630,6 @@ void Camera::cameraSetDefaults(MMAL_COMPONENT_T *camera) {
 	if (status)
 		throw CameraException("error setting defaults");
 }
+
+// constants
+const double Camera::ALPHA = 0.2;

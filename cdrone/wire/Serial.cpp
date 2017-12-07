@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <errno.h>
 
 #include <spdlog/spdlog.h>
 
@@ -15,16 +16,24 @@ Serial::Serial(const std::string& filename) : m_filename(filename) {
 }
 
 int Serial::read(void* buf, int n) {
-	int ret = ::read(m_fd, buf, n);
-	if (ret < 0) 
+	int ret;
+again:
+	if ((ret = ::read(m_fd, buf, n)) < 0) {
+		if (errno == EINTR)
+			goto again;
 		throw Serial("could not read");
+	}
 	return ret;
 }
 
 int Serial::write(const void* buf, int n) {
-	int ret = ::write(m_fd, buf, n);
-	if (ret < 0) 
+	int ret;
+again:
+	if ((ret = ::write(m_fd, buf, n)) < 0) {
+		if (errno == EINTR)
+			goto again;
 		throw Serial("could not write");
+	}
 	return ret;
 }
 
@@ -44,11 +53,16 @@ bool Serial::readFull(void *buf, int n) {
 	if (nRead < n)
 		return false;
 
-	if ((nRead = ::read(m_fd, buf, n)) != n) {
-		// TODO: handle interrupts.
-		spdlog::get("console")->error(
-				"wrong number of bytes read. expected {} got {}", n, nRead);
-		throw SerialException("wrong number of bytes read");
+	nRead = 0;
+	while (nRead < n) {
+		int ret;
+		if ((ret = ::read(m_fd, (void*)((char*)buf+nRead), n-nRead)) < 0) {
+			// if interrupt, try again.
+			if (errno == EINTR)
+				continue;
+			throw SerialException("could not read from the serial line");
+		}
+		nRead += ret;
 	}
 
 	return true;
@@ -89,8 +103,8 @@ int Serial::serialOpen(const std::string& filename) {
 	// read doesn't block
 	tty.c_cc[VMIN] = 0;
 
-	// 0.3 second read timeout
-	tty.c_cc[VTIME] = 3; 
+	// read timeout (non-blocking)
+	tty.c_cc[VTIME] = 0; 
 
 	if (tcsetattr (fd, TCSANOW, &tty) != 0) {
 		throw SerialException("could not set tc attributes");

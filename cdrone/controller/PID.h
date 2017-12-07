@@ -6,12 +6,14 @@ class PID {
 public:
 	PID();
 	PID(double p, double i, double d);
-	PID(double p, double i, double d, double min, double max);
+	PID(double p, double i, double d, double k);
+	PID(double p, double i, double d, double k, double min, double max);
 
 	double step(double err);
 	void reset();
 private:
 	double m_p, m_i, m_d;
+	double m_k;
 	double m_min, m_max;
 	double m_integral;
 	double m_lastTime, m_lastErr;

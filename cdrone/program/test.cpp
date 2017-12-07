@@ -12,6 +12,7 @@
 #include "controller/Watchdog.h"
 #include "hardware/Camera.h"
 #include "hardware/Infrared.h"
+#include "hardware/Skyline.h"
 #include "misc/Config.h"
 #include "wire/MultiWii.h"
 #include "wire/Serial.h"
@@ -19,32 +20,38 @@
 
 // test_infrared writes voltages and distances to stdout.
 void test_infrared(Config &config) {
-	spdlog::get("console")->info("initializing watchdog");
+	auto console = spdlog::get("console");
+	
+	console->info("initializing watchdog");
 	Watchdog watchdog(std::chrono::seconds(1));
 	
-	spdlog::get("console")->info("initializing infrared");
-	Infrared infrared(config.infraredAlpha(), config.infraredB(), 
-			config.infraredK());
+	console->info("initializing infrared");
+	auto obs = std::make_shared<Observations>();
+	Infrared infrared(config, obs);
 	
-	spdlog::get("console")->info("starting loop");
+	console->info("starting loop");
 	watchdog.start();
 	while (!shutdown) {
 		watchdog.ok();
 		infrared.update();
-		std::cout << infrared.voltage() << " " << infrared.distance() << std::endl;
+		console->info("height: {}, voltage: {}", obs->infraredHeight,
+				obs->infraredVoltage);
 	}
 }
 
 void test_multiwii(Config &config) {
-	spdlog::get("console")->info("initializing watchdog");
+	auto console = spdlog::get("console");
+	
+	console->info("initializing watchdog");
 	Watchdog watchdog(std::chrono::seconds(1));
 
-	spdlog::get("console")->info("initializing serial");
-	Serial serial("/dev/ttyUSB0");
-	spdlog::get("console")->info("initializing multiwii");
+	console->info("initializing serial");
+	Serial serial(config.skylinePort());
+
+	console->info("initializing multiwii");
 	MultiWii m(serial);
 
-	spdlog::get("console")->info("starting loop");
+	console->info("starting loop");
 	watchdog.start();
 	m.sendCMD(MultiWiiCMD::MSP_STATUS);
 	while (!shutdown) {
@@ -120,18 +127,51 @@ void test_ssl(Config &config) try {
 void test_camera(Config &config) {
 	auto console = spdlog::get("console");
 	try {
-		Camera camera(config);
+		console->info("initializing camera");
+		auto obs = std::make_shared<Observations>();
+		Camera camera(config, obs);
+
+		console->info("starting camera");
 		camera.start();
+
+		console->info("letting camera warm up");
 		std::this_thread::sleep_for(std::chrono::seconds(3));
-		camera.enablePosition();
+
+		console->info("starting position mode");
+		// camera.enablePosition();
 		while (!shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			double x = camera.m_x_motion;
-			double y = camera.m_y_motion;
+			double x = obs->cameraXMotion; double y = obs->cameraYMotion;
 			console->info("motion: {}, {}", x, y);
 		}
+
+		console->info("stopping camera");
 		camera.stop();
 	} catch (HardwareException &ex) {
-		spdlog::get("console")->error("error with camera: {}", ex.what());
+		console->error("error with camera: {}", ex.what());
+	}
+}
+
+void test_skyline(Config &config) {
+	auto console = spdlog::get("console");
+	try {
+		console->info("initializing skyline");
+		auto obs = std::make_shared<Observations>();
+		Skyline skyline(config, obs);
+		
+		console->info("starting info loop");
+		skyline.sendCalibrate();
+		skyline.sendAttitude();
+		skyline.sendIMU();
+		skyline.sendAnalog();
+		while (!shutdown) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			skyline.update();
+			console->info("vbat: {}, heading: {}", obs->skylineBattery,
+					obs->skylineAngYaw);
+		}
+
+	} catch (HardwareException &ex) {
+		console->error("got a hardware exception: {}", ex.what());
 	}
 }

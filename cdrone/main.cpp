@@ -65,6 +65,8 @@ int main(int argc, const char *argv[]) try {
 			test_ssl(config);
 		} else if (!strcmp(program, "camera")) {
 			test_camera(config);
+		} else if (!strcmp(program, "skyline")) {
+			test_skyline(config);
 		} else {
 			spdlog::get("console")->error("{} is not a valid program", program);
 			ret = 1;

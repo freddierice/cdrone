@@ -28,7 +28,16 @@ public:
 	const uint16_t& port() const { return m_port; }
 	const bool ssl() const { return m_ssl; }
 	const std::string& skylinePort() const { return m_skylinePort; }
-	const std::string& cameraPort() const { return m_cameraPort; }
+	const int& cameraPort() const { return m_cameraPort; }
+	const double& rollPIDP() const {return m_rollPIDP; }
+	const double& rollPIDI() const {return m_rollPIDI; }
+	const double& rollPIDD() const {return m_rollPIDD; }
+	const double& pitchPIDP() const {return m_pitchPIDP; }
+	const double& pitchPIDI() const {return m_pitchPIDI; }
+	const double& pitchPIDD() const {return m_pitchPIDD; }
+	const double& throttlePIDP() const {return m_throttlePIDP; }
+	const double& throttlePIDI() const {return m_throttlePIDI; }
+	const double& throttlePIDD() const {return m_throttlePIDD; }
 private:
 	Json::Value m_root;
 	
@@ -45,7 +54,16 @@ private:
 	uint16_t m_port;
 	bool m_ssl;
 	std::string m_skylinePort;
-	std::string m_cameraPort;
+	int m_cameraPort;
+	double m_rollPIDP;
+	double m_rollPIDI;
+	double m_rollPIDD;
+	double m_pitchPIDP;
+	double m_pitchPIDI;
+	double m_pitchPIDD;
+	double m_throttlePIDP;
+	double m_throttlePIDI;
+	double m_throttlePIDD;
 };
 
 #endif /* __CONFIG_H__ */

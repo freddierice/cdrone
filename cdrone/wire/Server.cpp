@@ -48,7 +48,7 @@ std::pair<google::protobuf::io::ZeroCopyInputStream*,
 	int client_fd;
 
 	if ((client_fd = ::accept(m_server_fd, NULL, NULL)) < 0)
-		throw ServerException("could not accept client");
+		throw ServerException("client not available");
 	/*
 	if (m_use_ssl) {
 		SSL* ssl = SSL_new(m_ctx);
@@ -110,7 +110,7 @@ SSL_CTX* Server::ssl_create_context(const char *cert, const char *privkey) {
 }
 
 int Server::create_socket(uint16_t port) {
-    int fd; 
+    int fd, flags; 
     struct sockaddr_in addr;
 	int one = 1;
     
@@ -127,6 +127,11 @@ int Server::create_socket(uint16_t port) {
 		throw ServerException("could not bind to a socket");
     if (listen(fd, 1) < 0)
 		throw ServerException("could not create listen queue");
+
+	// set socket non blocking
+	flags = ::fcntl(fd, F_GETFL);
+	flags |= O_NONBLOCK;
+	::fcntl(fd, F_SETFL, flags);
 
     return fd; 
 }

@@ -3,21 +3,31 @@ syntax = "proto3";
 package proto;
 
 message UpdateVelocity {
-	double roll = 1;
-	double pitch = 2;
-	double yaw = 3;
-	double throttle = 4;
+	uint32 roll = 1;
+	uint32 pitch = 2;
+	uint32 yaw = 3;
+	uint32 throttle = 4;
 }
 	
 enum UpdateMode {
 	NO_MODE_CHANGE = 0;
 	ARM = 1;
 	DISARM = 2;
+	TAKEOFF = 3;
+	LAND = 4;
+	VELOCITY = 5;
+	POSITION = 6;
 };
+
+enum UpdateCommand {
+	NO_COMMAND = 0;
+	RESET_POSITION = 1;
+}
 
 message Update {
 	UpdateVelocity velocity = 1;
 	UpdateMode mode = 2;
+	UpdateCommand cmd = 3;
 }
 
 

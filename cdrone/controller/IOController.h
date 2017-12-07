@@ -19,7 +19,11 @@ public:
 	IOController(Config& config);
 	~IOController();
 	
+	void accept();
 	void getMessage(google::protobuf::Message& message);
+
+	// true after a successful accept.
+	bool connected();
 
 private:
 	Server m_server;
@@ -27,6 +31,7 @@ private:
 	std::unique_ptr<google::protobuf::io::CodedOutputStream> m_output;
 	char* m_buffer;
 	uint64_t m_bufferLen;
+	bool m_connected;
 };
 
 #endif /* __IO_CONTROLLER_H__ */

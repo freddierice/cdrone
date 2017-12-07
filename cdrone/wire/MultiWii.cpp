@@ -40,7 +40,7 @@ bool MultiWii::recv(MultiWiiResponse &response) {
 		if (m_idx < 4)
 			return false;
 	}
-	int len = (int)m_recv[3]+5;
+	int len = (int)m_recv[3]+6;
 	if (m_idx != len) {
 		m_idx += m_serial.read(m_recv+m_idx, len - m_idx);
 		if (m_idx != len)
@@ -49,8 +49,8 @@ bool MultiWii::recv(MultiWiiResponse &response) {
 
 	// copy into the response and return true
 	response.m_type = static_cast<MultiWiiCMD>(m_recv[4]);
-	response.m_dataLen = len-5;
-	memcpy(response.m_data, m_recv, len);
+	response.m_dataLen = len-6;
+	memcpy(response.m_data, m_recv+5, response.m_dataLen);
 	m_idx = 0;
 
 	return true;

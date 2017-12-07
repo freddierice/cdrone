@@ -6,8 +6,10 @@
 
 #include <time.h>
 
+#include "controller/PID.h"
 #include "hardware/Skyline.h"
 #include "misc/Config.h"
+#include "misc/Observations.h"
 
 // FightMode holds the flight modes.
 enum FlightMode {Disarmed, Disarming, Arming, Armed, TakeOff, TouchDown, Hover,
@@ -21,7 +23,7 @@ enum FlightMode {Disarmed, Disarming, Arming, Armed, TakeOff, TouchDown, Hover,
 // be necesary some time in the future. 
 class FlightController {
 public:
-	FlightController(Config &config);
+	FlightController(Config &config, std::shared_ptr<Observations> obs);
 	
 	// FUNCTIONS TO BE RUN BY THE CONTROLLER THREAD //
 	// arm will set the mode to arm. This function is only valid when the 
@@ -30,13 +32,14 @@ public:
 
 	// calibrate will try to run a calibration on the drone. This function is
 	// only valid when the drone is in the disarm state.
-	bool calibrate();
+	void calibrate();
 
 	// disarm will disarm the drone. This is available when the drone is in any
 	// state. XXX: be careful, currently this may leave the drone in a weird
 	// state if it is re-armed after a rough disarm.
 	void disarm();
 
+	void takeoff();
 
 	// FUNCTION TO BE RUN BY THE UPDATER THREAD //
 	// update will send the signals to the underlying flight controller.
@@ -46,6 +49,9 @@ public:
 	FlightMode getMode();
 
 private:
+	// global observations made from other hardware.
+	std::shared_ptr<Observations> m_obs;
+	
 	// The current mode of the flight controller. This keeps track of the
 	// flight controller state machine.
 	std::atomic<FlightMode> m_mode;
@@ -54,10 +60,14 @@ private:
 	// know when it is time to send the right signals and transition into new
 	// states.
 	std::atomic<std::chrono::high_resolution_clock::time_point> m_lastModeChange;
-	std::unique_ptr<Skyline> m_skyline;
+	Skyline m_skyline;
 	
 	FlightController();
 	void setMode(FlightMode m);
+
+	PID m_rollPID;
+	PID m_pitchPID;
+	PID m_throttlePID;
 };
 
 #endif /* __FLIGHT_CONTROLLER_H__ */

@@ -2,8 +2,11 @@
 #define __CAMERA_H__
 #include <atomic>
 #include <string>
+#include <memory>
+
 #include "misc/Config.h"
 #include "misc/exception.h"
+#include "misc/Observations.h"
 
 #include </opt/vc/include/interface/mmal/mmal.h>
 // #include </opt/vc/include/interface/mmal/mmal_parameters_camera.h>
@@ -17,12 +20,14 @@ CDRONE_EXCEPTION(HardwareException, CameraException);
 
 class Camera {
 public:
-	Camera(Config& config);
-	Camera(const std::string& filename);
+	Camera();
+	Camera(Config& config, std::shared_ptr<Observations> obs);
+	Camera(int port, std::shared_ptr<Observations> obs);
 	~Camera();
 
 	static void initialize();
 	
+	// start or stop recording
 	void start();
 	void stop();
 
@@ -31,14 +36,7 @@ public:
 	void resetPosition();
 	void disablePosition();
 	
-	// atomic reference to motion vectors
-	std::atomic<double> m_x_motion;
-	std::atomic<double> m_y_motion;
-	std::atomic<double> m_x_position;
-	std::atomic<double> m_y_position;
-	std::atomic<double> m_yaw_position;
 private:
-	Camera();
 
 	// a callback from the mmal interface
 	static void callbackControl(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
@@ -65,11 +63,15 @@ private:
 	MMAL_POOL_T *m_splitterPool;
 
 	// details about camera
+	int m_port;
 	int m_width, m_height, m_framerate;
 	int m_cols, m_rows, m_blocks;
 	std::string m_name;
 
-	// camaera running
+	// observations
+	std::shared_ptr<Observations> m_obs;
+
+	// camera running
 	bool m_running;
 
 	// position information
@@ -79,6 +81,9 @@ private:
 	cv::Mat m_firstFrame, m_previousFrame, m_currentFrame;
 	char *m_firstFrameBuffer, *m_previousFrameBuffer,
 		 *m_currentFrameBuffer;
+	
+	// constants
+	static const double ALPHA;
 };
 
 // type definition for the inline vectors

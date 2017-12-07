@@ -19,6 +19,7 @@ public:
 	// create a watchdog with a certain timeout. Throws an exception if 
 	// too many watchdogs are created.
 	Watchdog(std::chrono::milliseconds timeout);
+	Watchdog(std::chrono::milliseconds timeout, const std::string& name);
 	
 	// ok resets the watchdog timer.
 	void ok();
@@ -47,6 +48,7 @@ private:
 	static std::atomic<bool> m_shutdown;
 	static const std::chrono::milliseconds EPOCH;
 	
+	const std::string m_name;
 	uint64_t m_id;
 	std::chrono::milliseconds m_duration;
 };

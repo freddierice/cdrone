@@ -7,7 +7,10 @@
 #include <chrono>
 #include <stdexcept>
 
-Watchdog::Watchdog(std::chrono::milliseconds duration) {
+Watchdog::Watchdog(std::chrono::milliseconds duration) : Watchdog(duration, 
+		"(no name)") {}
+Watchdog::Watchdog(std::chrono::milliseconds duration,
+		const std::string &name) : m_name(name) {
 	m_id = m_nextThreadID++;
 	m_duration = duration;
 	if (m_id >= m_nWatchdogs)
@@ -75,8 +78,10 @@ void Watchdog::check_thread() {
 		for (uint64_t i = 0; i < m_nWatchdogs; i++)
 			m_counts[i] += addCount;
 		for (uint64_t i = 0; i < m_nWatchdogs; i++)
-			if (m_maxes[i] != 0 && m_counts[i] > m_maxes[i])
+			if (m_maxes[i] != 0 && m_counts[i] > m_maxes[i]) {
+				// TODO: add killing name.
 				kill(0, SIGALRM);
+			}
 	}
 }
 
