@@ -1,11 +1,12 @@
-#include <signal.h>
-#include <sys/time.h>
-#include "Watchdog.h"
-
-#include <spdlog/spdlog.h>
-#include <thread>
 #include <chrono>
 #include <stdexcept>
+#include <thread>
+
+#include <signal.h>
+#include <sys/time.h>
+
+#include "controller/Watchdog.h"
+#include "misc/logging.h"
 
 Watchdog::Watchdog(std::chrono::milliseconds duration) : Watchdog(duration, 
 		"(no name)") {}
@@ -23,7 +24,7 @@ Watchdog::Watchdog() {
 }
 
 void Watchdog::initialize(int n) {
-	spdlog::get("console")->info("Watchdog::initialize");
+	console->info("Watchdog::initialize");
 	m_nextThreadID = 0;
 	m_nWatchdogs = n;
 	if (m_counts) {

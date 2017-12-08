@@ -121,7 +121,7 @@ func New(config Config) (*Base, error) {
 			defer wg.Done()
 			defer close(messageChan)
 			for !base.stop {
-				time.Sleep(time.Second)
+				time.Sleep(100 * time.Millisecond)
 				messageChan <- &proto.Update{
 					Mode: proto.UpdateMode_NO_MODE_CHANGE,
 				}

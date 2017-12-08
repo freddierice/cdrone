@@ -1,5 +1,3 @@
-#include "Serial.h"
-
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
@@ -9,6 +7,9 @@
 #include <termios.h>
 #include <errno.h>
 
+#include "misc/logging.h"
+#include "wire/Serial.h"
+
 #include <spdlog/spdlog.h>
 
 Serial::Serial(const std::string& filename) : m_filename(filename) {
@@ -17,67 +18,55 @@ Serial::Serial(const std::string& filename) : m_filename(filename) {
 
 int Serial::read(void* buf, int n) {
 	int ret;
+
 again:
 	if ((ret = ::read(m_fd, buf, n)) < 0) {
+		// got interrupted, try again.
 		if (errno == EINTR)
 			goto again;
+		// read call would block, let caller know.
+		if (errno == EAGAIN)
+			return 0;
 		throw Serial("could not read");
 	}
+
 	return ret;
 }
 
 int Serial::write(const void* buf, int n) {
 	int ret;
+
 again:
 	if ((ret = ::write(m_fd, buf, n)) < 0) {
 		if (errno == EINTR)
 			goto again;
 		throw Serial("could not write");
 	}
+
 	return ret;
 }
 
-bool Serial::readFull(void *buf, int n) {
-	int nRead;
-	if (::ioctl(m_fd, FIONREAD, &nRead)) {
-		spdlog::get("console")->warn("could not ioctl tty");
+void Serial::readFull(void *buf, int n) {
+	int numRead = 0;
 
-		// try to recover
-		::close(m_fd);
-		serialOpen(m_filename);
-		if (::ioctl(m_fd, FIONREAD, &nRead)) {
-			throw SerialException("error getting unread buffer");
-		}
-	}
-
-	if (nRead < n)
-		return false;
-
-	nRead = 0;
-	while (nRead < n) {
+	while (numRead < n) {
 		int ret;
-		if ((ret = ::read(m_fd, (void*)((char*)buf+nRead), n-nRead)) < 0) {
-			// if interrupt, try again.
-			if (errno == EINTR)
+		if ((ret = ::read(m_fd, (void*)((char*)buf+numRead), n-numRead)) < 0) {
+			// if interrupt or would block, try again.
+			if (errno == EINTR || errno == EAGAIN)
 				continue;
 			throw SerialException("could not read from the serial line");
 		}
-		nRead += ret;
+		numRead += ret;
 	}
-
-	return true;
 }
 
 void Serial::writeFull(const void *buf, int n) {
-	int total;
-	if ((total = ::write(m_fd, buf, n)) != n) {
-		if (total == -1)
-			throw SerialException("error writing");
-		// TODO: handle interrupts.
-		spdlog::get("console")->error(
-				"wrong number of bytes written. expected {} got {}", n, total);
-		throw SerialException("wrong number of bytes written");
-	}
+	int total = 0;
+
+	do {
+		total += write((const void *)((char *)buf+total), n-total);
+	} while (total != n);
 
 	// flush written to m_fd to the wire.
 	tcflush(m_fd, TCOFLUSH);
@@ -86,14 +75,15 @@ void Serial::writeFull(const void *buf, int n) {
 int Serial::serialOpen(const std::string& filename) {
 	struct termios tty;
 	int fd;
+
 	if ((fd = ::open(filename.c_str(), O_RDWR | O_NOCTTY | O_SYNC)) == -1) {
 		throw SerialException("could not open the serial port");
 	}
-
 	if (tcgetattr(fd, &tty)) {
 		throw SerialException("could not get tc attributes");
 	}
 
+	// turn off all special processing
 	cfmakeraw(&tty);
 
 	// set baud rate

@@ -1,8 +1,7 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++11 -O2 #-g # -O2
+CXX_FLAGS:=-Wall -std=c++14 -O2 #-g # -O2
 LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lopencv_core -lopencv_video -lopencv_imgcodecs # -latomic 
-MACHINE:=drone
 TARGET:=cdrone
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))
@@ -26,14 +25,6 @@ proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)
-
-# phony directives
-push: $(TARGET)
-	scp $(TARGET) $(MACHINE):
-
-run: $(TARGET)
-	scp $(TARGET) $(MACHINE):
-	ssh drone ./$(TARGET)
 
 clean:
 	@rm -f $(TARGET) *.o */*.o proto/*.pb.*

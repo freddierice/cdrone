@@ -6,22 +6,19 @@
 #include <string.h>
 #include <signal.h>
 
-#include <spdlog/spdlog.h>
-
 #include "main.h"
 #include "controller/Watchdog.h"
 #include "hardware/Camera.h"
 #include "hardware/Infrared.h"
 #include "hardware/Skyline.h"
 #include "misc/Config.h"
+#include "misc/logging.h"
 #include "wire/MultiWii.h"
 #include "wire/Serial.h"
 #include "wire/Server.h"
 
 // test_infrared writes voltages and distances to stdout.
 void test_infrared(Config &config) {
-	auto console = spdlog::get("console");
-	
 	console->info("initializing watchdog");
 	Watchdog watchdog(std::chrono::seconds(1));
 	
@@ -40,8 +37,6 @@ void test_infrared(Config &config) {
 }
 
 void test_multiwii(Config &config) {
-	auto console = spdlog::get("console");
-	
 	console->info("initializing watchdog");
 	Watchdog watchdog(std::chrono::seconds(1));
 
@@ -56,20 +51,11 @@ void test_multiwii(Config &config) {
 	m.sendCMD(MultiWiiCMD::MSP_STATUS);
 	while (!shutdown) {
 		watchdog.ok();
-		// TODO: uncomment
-		/*
-		char b;
-		if (serial.readFull(&b, 1)) {
-			std::cout << b;
-			std::cout.flush();
-		}
-		*/
+		// TODO: add multiwii tests
 	}
 }
 
 void test_watchdog(Config &config) {
-	auto console = spdlog::get("console");
-	
 	console->info("initializing watchdog1");
 	Watchdog watchdog1(std::chrono::seconds(1));
 	console->info("initializing watchdog2");
@@ -112,37 +98,44 @@ void test_ssl(Config &config) try {
 	const void *buf;
 	int len;
 	Server server(config);
+
 	auto zeroCopyStreams = server.accept();
 	auto zeroInputStream = zeroCopyStreams.first;
 	while (zeroInputStream->ByteCount() < 10 && 
 			zeroInputStream->Next(&buf, &len)) {
 		std::string recieved((const char *)buf, (size_t)len);
-		spdlog::get("console")->info("recieved: {}", recieved);
+		console->info("recieved: {}", recieved);
 	}
 
 } catch(ServerException &ex) {
-	spdlog::get("console")->error("could not start server: {}", ex.what());
+	console->error("could not start server: {}", ex.what());
 }
 
 void test_camera(Config &config) {
-	auto console = spdlog::get("console");
+	double xMotion, yMotion, xPosition, yPosition;
+
+	auto obs = std::make_shared<Observations>();
 	try {
 		console->info("initializing camera");
-		auto obs = std::make_shared<Observations>();
 		Camera camera(config, obs);
 
 		console->info("starting camera");
 		camera.start();
 
 		console->info("letting camera warm up");
-		std::this_thread::sleep_for(std::chrono::seconds(3));
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 
 		console->info("starting position mode");
-		// camera.enablePosition();
+		camera.enablePosition();
 		while (!shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			double x = obs->cameraXMotion; double y = obs->cameraYMotion;
-			console->info("motion: {}, {}", x, y);
+			xMotion= obs->cameraXMotion;
+			yMotion = obs->cameraYMotion;
+			xPosition = obs->cameraXPosition;
+			yPosition = obs->cameraYPosition;
+
+			console->info("motion: {}, {}", xMotion, yMotion);
+			console->info("position: {}, {}", xPosition, yPosition);
 		}
 
 		console->info("stopping camera");
@@ -153,7 +146,6 @@ void test_camera(Config &config) {
 }
 
 void test_skyline(Config &config) {
-	auto console = spdlog::get("console");
 	try {
 		console->info("initializing skyline");
 		auto obs = std::make_shared<Observations>();

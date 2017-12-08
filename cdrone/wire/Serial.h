@@ -20,12 +20,14 @@ public:
 
 	// read full n characters from the line. if n bytes are not read, the
 	// function throws a SerialException.
-	bool readFull(void* buf, int n);
+	void readFull(void* buf, int n);
 	
-	// writeFull writes a full n characters. If n characters are not read, the
-	// function will throw a SerialException.
+	// writeFull writes a full n characters. If n characters are not written,
+	// the function will throw a SerialException.
 	void writeFull(const void* buffer, int n);
 private:
+
+	// serialOpen opens a file descriptor to the serial port at filename.
 	static int serialOpen(const std::string& filename);
 	
 	// m_fd holds the file descriptor for the serial port.

@@ -1,12 +1,9 @@
-#include "hardware/Skyline.h"
-
 #include <string.h>
 #include <math.h>
-// #include <endian.h>
 
-#include <spdlog/spdlog.h>
-
-#include <misc/utility.h>
+#include "hardware/Skyline.h"
+#include "misc/logging.h"
+#include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
 		config.skylinePort()), m_multiwii(m_serial), m_obs(obs) {}
@@ -87,7 +84,7 @@ void Skyline::update() {
 	double lastRoll, lastPitch, lastYaw;
 	double now, dt;
 
-	// try to get the attitude every once in a while
+	// try to get the readings every update.
 	sendAttitude();
 
 	// field at most 10 reads at a time
@@ -144,7 +141,7 @@ void Skyline::update() {
 			case MSP_MOTOR:
 				break;
 			default:
-				spdlog::get("console")->warn("skyline got unexpected m_type: {}", (int)resp.m_type);
+				console->warn("skyline got unexpected m_type: {}", (int)resp.m_type);
 				break;
 		}
 	}

@@ -1,9 +1,9 @@
-#include "FlightController.h"
-
-#include <spdlog/spdlog.h>
-
 #include <iostream>
 #include <stdexcept>
+
+#include "controller/FlightController.h"
+#include "misc/logging.h"
+
 
 FlightController::FlightController(Config &config,
 		std::shared_ptr<Observations> obs) : m_obs(obs), 
@@ -11,8 +11,8 @@ FlightController::FlightController(Config &config,
 	m_skyline(config, obs), m_rollPID(config.rollPIDP(), config.rollPIDI(),
 			config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 		   config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
-	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(), config.throttlePIDD(),
-			1395, 1100, 1900) {
+	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
+			config.throttlePIDD(), 1395, 1100, 1900) {
 	m_mode = Disarmed;
 }
 
@@ -40,7 +40,7 @@ void FlightController::takeoff() {
 void FlightController::calibrate() {
 	// TODO: set mode to calibrate
 	if (m_mode != Disarmed) {
-		// spdlog::get("console")->warn("could not calibrate, in mode {}", m_mode);
+		console->warn("could not calibrate, in mode {}", m_mode);
 	}
 	// m_mode = Calibrating;
 	m_skyline.sendCalibrate();
@@ -51,7 +51,9 @@ void FlightController::update() {
 	double vx, vy;
 	double x, y;
 	std::chrono::high_resolution_clock::time_point then, now;
-	auto mode = getMode();
+	FlightMode mode;
+
+	mode = getMode();
 	switch(mode) {
 		case FlightMode::Disarmed:
 			// don't do anything.. we are disarmed.

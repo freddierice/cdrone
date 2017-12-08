@@ -1,5 +1,3 @@
-#include "Camera.h"
-
 #include <vector>
 
 // TODO: change to relative paths
@@ -9,8 +7,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <spdlog/spdlog.h>
-
+#include "hardware/Camera.h"
+#include "misc/logging.h"
 #include "misc/utility.h"
 
 // definitions for things that should exist in the MMAL library.
@@ -34,8 +32,6 @@ Camera::Camera(int port, std::shared_ptr<Observations> obs) :
 	MMAL_PORT_T *preview_port, *video_port, *still_port;
 	MMAL_ES_FORMAT_T *format;
 	MMAL_STATUS_T status;
-	
-	auto console = spdlog::get("console");
 	
 	m_frameBufferLength = m_height*m_width*3;
 	m_firstFrameBuffer = new char[m_frameBufferLength];
@@ -314,7 +310,7 @@ void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	// function can take a look at buffer->cmd
 	//  - MMAL_EVENT_PARAMETER_CHANGED
 	//  - MMAL_EVENT_ERROR
-	spdlog::get("console")->info("callbackControl");
+	console->info("callbackControl");
 	mmal_buffer_header_release(buffer);
 }
 
@@ -353,11 +349,11 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	if (port->is_enabled) {
 		buffer = mmal_queue_get(camera->m_encoderPool->queue);
 		if (!buffer) {
-		   // spdlog::get("console")->warn("no buffer");
+		   console->warn("no buffer");
 		   return;
 		}
-		mmal_port_send_buffer(port, buffer);
-			// spdlog::get("console")->info("could not send buffer to encoder");
+		if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
+			console->info("could not send buffer to encoder");
 	}
 }
 
@@ -426,7 +422,7 @@ done:
 		if (!buffer)
 			return;
 		if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
-			spdlog::get("console")->info("could not send buffer to encoder");
+			console->info("could not send buffer to encoder");
 	}
 }
 
@@ -435,11 +431,11 @@ void Camera::sendBuffers(MMAL_PORT_T* port, MMAL_POOL_T* pool) {
 	for (int i = 0; i < numBuffers; i++) {
 		auto buffer = mmal_queue_get(pool->queue);
 		if (!buffer) {
-		   spdlog::get("console")->warn("no buffer");
-		   // continue;
+		   console->warn("no buffer");
+		   continue;
 		}
 		if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS) {
-			spdlog::get("console")->info("could not send buffer");
+			console->info("could not send buffer");
 		}
 	}
 }
@@ -453,9 +449,11 @@ void Camera::disablePosition() {
 }
 
 void Camera::start() {
+	MMAL_STATUS_T status;
+
 	if (m_running)
 		return;
-	auto status = mmal_port_parameter_set_boolean(
+	status = mmal_port_parameter_set_boolean(
 			m_camera->output[MMAL_CAMERA_VIDEO_PORT], 
 			MMAL_PARAMETER_CAPTURE, 1);
 	if (status != MMAL_SUCCESS)
@@ -467,17 +465,17 @@ void Camera::start() {
 }
 
 void Camera::stop() {
+	MMAL_STATUS_T status;
+
 	if (!m_running)
 		return;
-	auto status = mmal_port_parameter_set_boolean(
+	status = mmal_port_parameter_set_boolean(
 			m_camera->output[MMAL_CAMERA_VIDEO_PORT], 
 			MMAL_PARAMETER_CAPTURE, 0);
 	if (status != MMAL_SUCCESS)
 		throw CameraException("could not stop camera");
-	m_running = false;
 
-	// dump queues
-	
+	m_running = false;
 }
 
 Camera::~Camera() {
