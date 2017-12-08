@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdexcept>
 
 #include "controller/FlightController.h"
@@ -49,7 +48,7 @@ void FlightController::calibrate() {
 void FlightController::update() {
 	uint16_t roll, pitch, throttle;
 	double vx, vy;
-	double x, y;
+	// double x, y;
 	std::chrono::high_resolution_clock::time_point then, now;
 	FlightMode mode;
 
@@ -87,12 +86,11 @@ void FlightController::update() {
 			vy = ((double)m_obs->ioVelocityPitch - 1500.0) / 1000.0;
 			roll = (uint16_t)m_rollPID.step(m_obs->cameraXMotion - vx);
 			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraYMotion - vy);
-			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - 0.2);
+			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - 0.35);
 			m_skyline.sendRC(roll, pitch,
 					m_obs->ioVelocityYaw, throttle);
-			x = m_obs->cameraXMotion; y = m_obs->cameraYMotion;
-			std::cout << roll << " " << pitch << " " << throttle << std::endl;
-			std::cout << x << " " << y << std::endl;
+			// x = m_obs->cameraXMotion; 
+			// y = m_obs->cameraYMotion;
 			break;
 		case FlightMode::Armed:
 			m_skyline.sendIdle();

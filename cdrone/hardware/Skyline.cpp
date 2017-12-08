@@ -86,9 +86,11 @@ void Skyline::update() {
 
 	// try to get the readings every update.
 	sendAttitude();
+	sendIMU();
+	sendAnalog();
 
-	// field at most 10 reads at a time
-	for (int i = 0; i < 10; i++) {
+	// field at most 20 reads at a time
+	for (int i = 0; i < 20; i++) {
 		// get messages ready from multiwii.
 		if (!m_multiwii.recv(resp))
 			return;

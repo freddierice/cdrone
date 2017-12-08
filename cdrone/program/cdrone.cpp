@@ -101,7 +101,6 @@ void do_io(Watchdog &watchdog, Config &config,
 				obs->ioVelocityYaw = velocity.yaw();
 				obs->ioVelocityThrottle = velocity.throttle();
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
 	watchdog.stop();
@@ -130,7 +129,7 @@ void do_controller(Watchdog &watchdog, Config &config,
 	while (!shutdown) {
 		watchdog.ok();
 		flightController.update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(30));
 	}
 	watchdog.stop();
 }
