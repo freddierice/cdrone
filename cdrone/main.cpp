@@ -6,15 +6,15 @@
 #include <string.h>
 #include <signal.h>
 
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-
 #include "controller/Watchdog.h"
 #include "misc/Config.h"
 #include "misc/exception.h"
 #include "misc/logging.h"
 #include "program/cdrone.h"
 #include "program/test.h"
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 	
 // shutdown handlers.
 std::atomic_bool shutdown;

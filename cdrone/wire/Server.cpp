@@ -1,16 +1,17 @@
+#include <arpa/inet.h>
+#include <error.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include "wire/Server.h"
 // #include "wire/SSLStreams.h"
 
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <error.h>
-
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-#include <spdlog/spdlog.h>
 
 Server::Server(Config &config) :
 	m_certificate(config.certificate()), m_key(config.key()),

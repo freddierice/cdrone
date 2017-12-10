@@ -1,4 +1,4 @@
-#include "ADS1115.h"
+#include "hardware/ADS1115.h"
 
 ADS1115::ADS1115(int channel, int address) : m_i2c(address), m_channel(channel) {}
 ADS1115::ADS1115(int channel) : ADS1115(0, ADS1115::DEFAULT_ADDRESS) {}

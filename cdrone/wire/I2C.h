@@ -3,7 +3,9 @@
 #include <string>
 #include <inttypes.h>
 
-class I2CException : public std::exception {};
+#include "misc/exception.h"
+
+CDRONE_EXCEPTION(HardwareException, I2CException);
 
 class I2C {
 public:
@@ -11,16 +13,19 @@ public:
 	I2C(int addr, const std::string &filename);
 	~I2C();
 
-	// bool read(int cmd);
+	// write value to reg.
 	void writeRegister(uint8_t reg, uint16_t value);
+
+	// read a value from reg.
 	uint16_t readRegister(uint8_t reg);
-	// bool write(int cmd, const char *buf, int n);
 	
+	// default I2C filename
 	static const std::string I2C_FILENAME;
 private:
 	int m_addr;
 	int m_fd;
 
+	// open an I2C connection, returns a file descriptor
 	static int openI2C(const std::string &filename, int addr);
 };
 

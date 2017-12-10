@@ -1,4 +1,4 @@
-#include "Infrared.h"
+#include "hardware/Infrared.h"
 
 Infrared::Infrared(Config &config, std::shared_ptr<Observations> obs) : 
 	Infrared(config.infraredAlpha(), config.infraredB(), config.infraredK(), obs) {}

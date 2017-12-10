@@ -2,6 +2,7 @@
 #define __SKYLINE_H__
 
 #include <memory>
+
 #include <inttypes.h>
 
 #include "misc/Config.h"

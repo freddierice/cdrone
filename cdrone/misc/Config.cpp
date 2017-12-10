@@ -1,7 +1,7 @@
-#include "Config.h"
-
 #include <iostream>
 #include <fstream>
+
+#include "misc/Config.h"
 
 Config::Config(const std::string &filename) {
 	std::ifstream config_file(filename);

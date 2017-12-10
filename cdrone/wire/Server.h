@@ -1,20 +1,19 @@
 #ifndef __SERVER_H__
 #define __SERVER_H__
-#include <inttypes.h>
-
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-#include <google/protobuf/io/zero_copy_stream.h>
-#include <openssl/ssl.h>
+#include <inttypes.h>
 
 #include "misc/Config.h"
+#include "misc/exception.h"
 
-class ServerException : public std::runtime_error {
-public:
-    ServerException(std::string const& msg) : std::runtime_error(msg) {}
-};
+#include <google/protobuf/io/zero_copy_stream.h>
+
+#include <openssl/ssl.h>
+
+CDRONE_EXCEPTION(CDroneException, ServerException);
 
 class Server {
 public:

@@ -1,6 +1,6 @@
-#include "wire/MultiWii.h"
-
 #include <string.h>
+
+#include "wire/MultiWii.h"
 
 
 MultiWii::MultiWii(Serial &serial) : m_serial(serial), 
@@ -33,6 +33,7 @@ void MultiWii::sendRaw(const void *buffer, int n) {
 	m_serial.writeFull(buffer, n);
 }
 
+// TODO: performance increase with circular buffer.
 bool MultiWii::recv(MultiWiiResponse &response) {
 	// first read into the buffer what we want.
 	if (m_idx < 4) {

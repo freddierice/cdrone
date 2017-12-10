@@ -1,11 +1,9 @@
 #ifndef __WATCHDOG__
 #define __WATCHDOG__
 #include <iostream>
+
+#include <stdlib.h>
 #include <unistd.h>
-#include <cstdlib>
-
-#include <spdlog/spdlog.h>
-
 
 // Watchdog shuts down the program when too much time has passed.
 class Watchdog {

@@ -5,11 +5,11 @@
 #include </opt/vc/include/interface/mmal/util/mmal_util.h>
 #include </opt/vc/include/interface/mmal/util/mmal_util_params.h>
 
-#include <opencv2/opencv.hpp>
-
 #include "hardware/Camera.h"
 #include "misc/logging.h"
 #include "misc/utility.h"
+
+#include <opencv2/opencv.hpp>
 
 // definitions for things that should exist in the MMAL library.
 #define MMAL_CAMERA_PREVIEW_PORT 0
