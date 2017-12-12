@@ -10,24 +10,25 @@
 class Observations {
 public:
 	Observations() : infraredHeight(0.0), infraredVoltage(0.0),
-	cameraXMotion(0.0), cameraYMotion(0.0), cameraXPosition(0.0),
-	cameraYPosition(0.0), cameraYawPosition(0.0), skylineBattery(0.0),
+	cameraMotionX(0.0), cameraMotionY(0.0), cameraPositionX(0.0),
+	cameraPositionY(0.0), cameraPositionYaw(0.0), skylineBattery(0.0),
 	skylineAccX(0.0), skylineAccY(0.0), skylineAccZ(0.0), skylineGyroX(0.0),
 	skylineGyroY(0.0), skylineGyroZ(0.0), skylineAngRoll(0.0), skylineAngPitch(0.0),
 	skylineAngYaw(0.0), skylineAngRollVel(0.0), skylineAngPitchVel(0.0),
-	skylineAngYawVel(0.0), ioVelocityRoll(1500), ioVelocityPitch(1500),
-	ioVelocityYaw(1500), ioVelocityThrottle(1000) {}
+	skylineAngYawVel(0.0), ioRawRoll(1500), ioRawPitch(1500), ioRawYaw(1500), 
+	ioRawThrottle(1000), ioVelocityX(0.0), ioVelocityY(0.0), ioPositionX(0.0),
+	ioPositionY(0.0), ioPositionZ(0.30) {}
 
 	// Infrared writes here
 	std::atomic<double> infraredHeight;
 	std::atomic<double> infraredVoltage;
 
 	// Camera writes here
-	std::atomic<double> cameraXMotion;
-	std::atomic<double> cameraYMotion;
-	std::atomic<double> cameraXPosition;
-	std::atomic<double> cameraYPosition;
-	std::atomic<double> cameraYawPosition;
+	std::atomic<double> cameraMotionX;
+	std::atomic<double> cameraMotionY;
+	std::atomic<double> cameraPositionX;
+	std::atomic<double> cameraPositionY;
+	std::atomic<double> cameraPositionYaw;
 
 	// Skyline writes here
 	std::atomic<double> skylineBattery;
@@ -45,10 +46,26 @@ public:
 	std::atomic<double> skylineAngYawVel;
 
 	// IOController writes here
-	std::atomic<uint16_t> ioVelocityRoll;
-	std::atomic<uint16_t> ioVelocityPitch;
-	std::atomic<uint16_t> ioVelocityYaw;
-	std::atomic<uint16_t> ioVelocityThrottle;
+	std::atomic<uint16_t> ioRawRoll;
+	std::atomic<uint16_t> ioRawPitch;
+	std::atomic<uint16_t> ioRawYaw;
+	std::atomic<uint16_t> ioRawThrottle;
+	std::atomic<double> ioVelocityX;
+	std::atomic<double> ioVelocityY;
+	std::atomic<double> ioPositionX;
+	std::atomic<double> ioPositionY;
+	std::atomic<double> ioPositionZ;
+	void resetIO() { // reset the io values to their defaults.
+		ioRawRoll = 1500;
+		ioRawPitch = 1500;
+		ioRawYaw = 1500;
+		ioRawThrottle = 1000;
+		ioVelocityX = 0;
+		ioVelocityY = 0;
+		ioPositionX = 0;
+		ioPositionY = 0;
+		// ioPositionZ = 0.35;
+	};
 };
 
 #endif /* __OBSERVATIONS_H__ */

@@ -36,6 +36,24 @@ void FlightController::takeoff() {
 		setMode(TakeOff);
 }
 
+void FlightController::rawControl() {
+	auto mode = getMode();
+	if (mode == VelocityControl || mode == PositionControl)
+		setMode(RawControl);
+}
+
+void FlightController::velocityControl() {
+	auto mode = getMode();
+	if (mode == RawControl || mode == PositionControl)
+		setMode(RawControl);
+}
+
+void FlightController::positionControl() {
+	auto mode = getMode();
+	if (mode == RawControl || mode == PositionControl)
+		setMode(RawControl);
+}
+
 void FlightController::calibrate() {
 	// TODO: set mode to calibrate
 	if (m_mode != Disarmed) {
@@ -47,7 +65,6 @@ void FlightController::calibrate() {
 
 void FlightController::update() {
 	uint16_t roll, pitch, throttle;
-	double vx, vy;
 	// double x, y;
 	std::chrono::high_resolution_clock::time_point then, now;
 	FlightMode mode;
@@ -78,20 +95,19 @@ void FlightController::update() {
 			}
 			break;
 		case FlightMode::TakeOff:
-			/*
-			m_skyline.sendRC(m_obs->ioVelocityRoll, m_obs->ioVelocityPitch,
-					m_obs->ioVelocityYaw, m_obs->ioVelocityThrottle);
-					*/
-			vx = ((double)m_obs->ioVelocityRoll - 1500.0) / 1000.0;
-			vy = ((double)m_obs->ioVelocityPitch - 1500.0) / 1000.0;
-			roll = (uint16_t)m_rollPID.step(m_obs->cameraXMotion - vx);
-			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraYMotion - vy);
-			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - 0.35);
-			m_skyline.sendRC(roll, pitch,
-					m_obs->ioVelocityYaw, throttle);
-			// x = m_obs->cameraXMotion; 
-			// y = m_obs->cameraYMotion;
+			setMode(VelocityControl);
 			break;
+		case FlightMode::RawControl:
+			m_skyline.sendRC(m_obs->ioRawRoll, m_obs->ioRawPitch,
+					m_obs->ioRawYaw, m_obs->ioRawThrottle);
+		case FlightMode::VelocityControl:
+			roll = (uint16_t)m_rollPID.step(m_obs->cameraMotionX - m_obs->ioVelocityX);
+			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraMotionY - m_obs->ioVelocityY);
+			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - m_obs->ioPositionZ);
+			m_skyline.sendRC(roll, pitch, 1500, throttle);
+			break;
+		case FlightMode::PositionControl:
+			setMode(VelocityControl);
 		case FlightMode::Armed:
 			m_skyline.sendIdle();
 			break;

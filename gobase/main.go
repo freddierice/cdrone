@@ -8,6 +8,8 @@ import (
 	termbox "github.com/nsf/termbox-go"
 )
 
+const DefaultHeight = 0.35
+
 func main() {
 	err := termbox.Init()
 	if err != nil {
@@ -51,10 +53,9 @@ func main() {
 	defer b.Close()
 
 	// initialize some variables
-	roll := uint32(1500)
-	pitch := uint32(1500)
-	yaw := uint32(1500)
-	throttle := uint32(1000)
+	x := float64(0.0)
+	y := float64(0.0)
+	z := float64(0.35)
 
 	// loop over the base
 Done:
@@ -75,27 +76,33 @@ Done:
 			} else if ev.Ch == 'r' {
 				b.ResetPosition()
 			} else if ev.Ch == 'w' {
-				pitch = 1400
-				b.SetVelocity(roll, pitch, yaw, throttle)
+				z += 0.05
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'a' {
-				roll = 1600
-				b.SetVelocity(roll, pitch, yaw, throttle)
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 's' {
-				pitch = 1600
-				b.SetVelocity(roll, pitch, yaw, throttle)
+				z -= 0.05
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'd' {
-				roll = 1400
-				b.SetVelocity(roll, pitch, yaw, throttle)
+				x = 0.1
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'h' {
-				roll = 1500
-				pitch = 1500
-				yaw = 1500
-				b.SetVelocity(roll, pitch, yaw, throttle)
+				x = 0
+				y = 0
+				z = DefaultHeight
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'i' {
+				y = 0.1
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'j' {
+				x = -0.1
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'k' {
+				y = -0.1
+				b.SetVelocity(x, y, z)
 			} else if ev.Ch == 'l' {
-
+				x = 0.1
+				b.SetVelocity(x, y, z)
 			}
 		}
 	}

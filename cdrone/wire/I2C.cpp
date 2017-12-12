@@ -30,7 +30,7 @@ reg_again:
 	if (::write(m_fd, (const void *)&reg, sizeof(reg)) < 0) {
 		if (errno == EINTR)
 			goto reg_again;
-		throw I2CException("could not write to i2c");
+		throw I2CException("could not write register to i2c");
 	}
 
 	// purposeful block, we should get a response soon.
@@ -48,7 +48,7 @@ void I2C::writeRegister(uint8_t reg, uint16_t value) {
 	struct message {
 		uint8_t  reg;
 		uint16_t value;
-	} msg;
+	} __attribute__((packed)) msg;
 	msg.reg = reg;
 	msg.value = htons(value);
 

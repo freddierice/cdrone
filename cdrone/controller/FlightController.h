@@ -13,7 +13,7 @@
 
 // FightMode holds the flight modes.
 enum FlightMode {Disarmed, Disarming, Arming, Armed, TakeOff, TouchDown, Hover,
-	Calibrating};
+	Calibrating, RawControl, VelocityControl, PositionControl};
 
 // FlightController controls an underlying flight controller. The object is
 // dependant on a two thread model, a single controller and updater. One thread
@@ -39,7 +39,17 @@ public:
 	// state if it is re-armed after a rough disarm.
 	void disarm();
 
+	// takeoff will let the drone takeoff and move into velocity mode.
 	void takeoff();
+
+	// rawMode will put the drone into the raw mode.
+	void rawControl();
+
+	// velocityMode will put the drone into the velocity mode.
+	void velocityControl();
+
+	// positionMode will put the drone into position mode.
+	void positionControl();
 
 	// FUNCTION TO BE RUN BY THE UPDATER THREAD //
 	// update will send the signals to the underlying flight controller.

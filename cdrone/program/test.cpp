@@ -129,10 +129,10 @@ void test_camera(Config &config) {
 		camera.enablePosition();
 		while (!shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			xMotion= obs->cameraXMotion;
-			yMotion = obs->cameraYMotion;
-			xPosition = obs->cameraXPosition;
-			yPosition = obs->cameraYPosition;
+			xMotion= obs->cameraMotionX;
+			yMotion = obs->cameraMotionY;
+			xPosition = obs->cameraPositionX;
+			yPosition = obs->cameraPositionY;
 
 			console->info("motion: {}, {}", xMotion, yMotion);
 			console->info("position: {}, {}", xPosition, yPosition);

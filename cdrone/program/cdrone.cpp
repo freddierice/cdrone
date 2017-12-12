@@ -63,18 +63,28 @@ void do_io(Watchdog &watchdog, Config &config,
 			
 			// check the update mode
 			switch (update.mode()) {
-				case proto::UpdateMode::NO_MODE_CHANGE:
+				case proto::NO_MODE:
 					break;
-				case proto::UpdateMode::ARM:
+				case proto::ARM:
 					console->info("io ARM");
 					flightController.arm();
 					break;
-				case proto::UpdateMode::DISARM:
+				case proto::DISARM:
 					console->info("io DISARM");
 					flightController.disarm();
+					obs->resetIO();
 					break;
-				case proto::UpdateMode::TAKEOFF:
+				case proto::TAKEOFF:
 					flightController.takeoff();
+					break;
+				case proto::RAW:
+					flightController.rawControl();
+					break;
+				case proto::VELOCITY:
+					flightController.velocityControl();
+					break;
+				case proto::POSITION:
+					flightController.positionControl();
 					break;
 				default:
 					console->warn("received unknown mode {}", update.mode());
@@ -83,9 +93,9 @@ void do_io(Watchdog &watchdog, Config &config,
 
 			// check for any commands.
 			switch (update.cmd()) {
-				case proto::UpdateCommand::NO_COMMAND:
+				case proto::NO_COMMAND:
 					break;
-				case proto::UpdateCommand::RESET_POSITION:
+				case proto::RESET_POSITION:
 					console->info("io RESET_POSITION");
 					camera.resetPosition();
 					break;
@@ -93,13 +103,29 @@ void do_io(Watchdog &watchdog, Config &config,
 					console->warn("got unknown UpdateCommand");
 			}
 			
+			// check the raw mode
+			if (update.has_raw()) {
+				auto raw = update.raw();
+				obs->ioRawRoll = raw.roll();
+				obs->ioRawPitch = raw.pitch();
+				obs->ioRawYaw = raw.yaw();
+				obs->ioRawThrottle = raw.throttle();
+			}
+
 			// check the velocity mode
 			if (update.has_velocity()) {
 				auto velocity = update.velocity();
-				obs->ioVelocityRoll = velocity.roll();
-				obs->ioVelocityPitch = velocity.pitch();
-				obs->ioVelocityYaw = velocity.yaw();
-				obs->ioVelocityThrottle = velocity.throttle();
+				obs->ioVelocityX = velocity.x();
+				obs->ioVelocityY = velocity.y();
+				obs->ioPositionZ = velocity.z();
+			}
+
+			// check the position mode
+			if (update.has_position()) {
+				auto position = update.position();
+				obs->ioPositionX = position.x();
+				obs->ioPositionY = position.y();
+				obs->ioPositionZ = position.z();
 			}
 		}
 	}
@@ -129,7 +155,7 @@ void do_controller(Watchdog &watchdog, Config &config,
 	while (!shutdown) {
 		watchdog.ok();
 		flightController.update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		std::this_thread::sleep_for(std::chrono::milliseconds(40));
 	}
 	watchdog.stop();
 }

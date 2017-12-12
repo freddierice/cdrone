@@ -331,18 +331,18 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		mmal_buffer_header_mem_unlock(buffer);
 
 		// normalize the motion and use lazy motion blur
-		x_motion /= -camera->m_blocks;
-		y_motion /= camera->m_blocks;
+		x_motion /= camera->m_blocks;
+		y_motion /= -camera->m_blocks;
 		x_motion *= 0.025;
 		y_motion *= 0.025;
 		x_motion -= tan(camera->m_obs->skylineAngRollVel/30.0);
 		y_motion -= tan(camera->m_obs->skylineAngPitchVel/30.0);
-		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraXMotion;
-		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraYMotion;
+		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraMotionX;
+		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraMotionY;
 
 		// set new motion
-		camera->m_obs->cameraXMotion = x_motion;
-		camera->m_obs->cameraYMotion = y_motion;
+		camera->m_obs->cameraMotionX = x_motion;
+		camera->m_obs->cameraMotionY = y_motion;
 	}
 	mmal_buffer_header_release(buffer);
 
@@ -359,9 +359,9 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 
 void Camera::resetPosition() {
 	m_hasFirstFrame = false;
-	m_obs->cameraXPosition = 0.0;
-	m_obs->cameraYPosition = 0.0;
-	m_obs->cameraYawPosition = 0.0;
+	m_obs->cameraPositionX = 0.0;
+	m_obs->cameraPositionY = 0.0;
+	m_obs->cameraPositionYaw = 0.0;
 }
 
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
@@ -398,8 +398,8 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 
 			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
 			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
-			camera->m_obs->cameraXPosition = x*ALPHA + camera->m_obs->cameraXPosition*(1.0-ALPHA);
-			camera->m_obs->cameraYPosition = y*ALPHA + camera->m_obs->cameraYPosition*(1.0-ALPHA);
+			camera->m_obs->cameraPositionX = x*ALPHA + camera->m_obs->cameraPositionX*(1.0-ALPHA);
+			camera->m_obs->cameraPositionY = y*ALPHA + camera->m_obs->cameraPositionY*(1.0-ALPHA);
 			goto done;
 		}
 
@@ -408,8 +408,8 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 				camera->m_currentFrame, false);
 		x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
 		y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
-		camera->m_obs->cameraXPosition = camera->m_obs->cameraXPosition + x;
-		camera->m_obs->cameraYPosition = camera->m_obs->cameraYPosition + y;
+		camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
+		camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
 
 		// copy current frame to the previous
 		::memcpy(camera->m_previousFrameBuffer, camera->m_currentFrameBuffer, camera->m_frameBufferLength);

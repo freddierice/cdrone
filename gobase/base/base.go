@@ -123,7 +123,7 @@ func New(config Config) (*Base, error) {
 			for !base.stop {
 				time.Sleep(100 * time.Millisecond)
 				messageChan <- &proto.Update{
-					Mode: proto.UpdateMode_NO_MODE_CHANGE,
+					Mode: proto.Mode_NO_MODE,
 				}
 			}
 		}()
