@@ -267,9 +267,9 @@ Camera::Camera(int port, std::shared_ptr<Observations> obs) :
 		throw CameraException("could not enable the preview connection");
 	
 	// connect video to splitter
-	status = mmal_connection_create(&m_splitterConnection, 
-			m_camera->output[MMAL_CAMERA_VIDEO_PORT], m_splitter->input[0], 
-			MMAL_CONNECTION_FLAG_TUNNELLING | 
+	status = mmal_connection_create(&m_splitterConnection,
+			m_camera->output[MMAL_CAMERA_VIDEO_PORT], m_splitter->input[0],
+			MMAL_CONNECTION_FLAG_TUNNELLING |
 			MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT);
 	if (status != MMAL_SUCCESS)
 		throw CameraException("could not create the splitter connection");
@@ -395,7 +395,7 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		cv::Mat estimate = cv::estimateRigidTransform(camera->m_firstFrame, 
 				camera->m_currentFrame, false);
 		if (!estimate.empty()) {
-
+			// slowly transition from lost frame to position.
 			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
 			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
 			camera->m_obs->cameraPositionX = x*ALPHA + camera->m_obs->cameraPositionX*(1.0-ALPHA);
@@ -408,6 +408,8 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 				camera->m_currentFrame, false);
 		x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
 		y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+		
+		// add the delta
 		camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
 		camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
 
