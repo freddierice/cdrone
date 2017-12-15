@@ -3,108 +3,144 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"./base"
 	termbox "github.com/nsf/termbox-go"
 )
 
+// DefaultHeight holds the initial height of the drone in meters.
 const DefaultHeight = 0.35
 
-func main() {
+func printAt(x, y int, s string) {
+	for _, r := range s {
+		termbox.SetCell(x, y, r, termbox.ColorWhite, termbox.ColorBlack)
+		x++
+	}
+}
+
+func refresh(b *base.Base) {
+	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
+
+	// print out the instructions
+	printAt(0, 0, "INSTRUCTIONS")
+	printAt(0, 1, "; - arm")
+	printAt(0, 2, "[spacebar] - disarm")
+	printAt(0, 3, "t - takeoff")
+	printAt(0, 4, "a - yaw left")
+	printAt(0, 5, "d - yaw right")
+	printAt(0, 6, "w - up")
+	printAt(0, 7, "s - down")
+	printAt(0, 8, "j - left")
+	printAt(0, 9, "l - right")
+	printAt(0, 10, "i - forward")
+	printAt(0, 11, "k - backward")
+	printAt(0, 12, "h - hover")
+	printAt(0, 13, "r - reset the image for position mode")
+	printAt(0, 14, "p - toggle position mode")
+
+	// increment 40
+	printAt(40, 0, "VALUES")
+	printAt(40, 1, fmt.Sprintf("Battery: %v", b.Drone.Battery))
+	printAt(40, 2, fmt.Sprintf("Mode: %v", b.Drone.Mode))
+	termbox.Flush()
+}
+
+func doInput() error {
 	err := termbox.Init()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer termbox.Close()
 
 	termbox.SetInputMode(termbox.InputAlt)
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	termbox.Flush()
-
-	// print out the instructions
-	fmt.Println("INSTRUCTIONS")
-	fmt.Println("; - arm")
-	fmt.Println("[spacebar] - disarm")
-	fmt.Println("t - takeoff")
-	fmt.Println("a - yaw left")
-	fmt.Println("d - yaw right")
-	fmt.Println("w - up")
-	fmt.Println("s - down")
-	fmt.Println("j - left")
-	fmt.Println("l - right")
-	fmt.Println("i - forward")
-	fmt.Println("k - backward")
-	fmt.Println("h - hover")
-	fmt.Println("r - reset the image used for position hold")
-	fmt.Println("p - toggle position mode")
 
 	// initialize the base
 	baseConfig, err := base.ParseConfig("gobase.conf")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not parse gobase.conf: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("could not parse gobase.conf: %v", err)
 	}
 
 	b, err := base.New(*baseConfig)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not create base: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("could not create base: %v", err)
 	}
 	defer b.Close()
 
-	// initialize some variables
-	x := float64(0.0)
-	y := float64(0.0)
-	z := float64(0.35)
+	// refresh screen
+	refresh(b)
 
-	// loop over the base
-Done:
-	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			if ev.Ch == 'q' {
-				fmt.Println("shutting down")
-				break Done
-			} else if ev.Ch == ';' {
-				b.Arm()
-			} else if ev.Key == termbox.KeySpace {
-				b.Disarm()
-			} else if ev.Ch == 't' {
-				b.Takeoff()
-			} else if ev.Ch == 'p' {
-				b.Position()
-			} else if ev.Ch == 'r' {
-				b.ResetPosition()
-			} else if ev.Ch == 'w' {
-				z += 0.05
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'a' {
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 's' {
-				z -= 0.05
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'd' {
-				x = 0.1
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'h' {
-				x = 0
-				y = 0
-				z = DefaultHeight
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'i' {
-				y = 0.1
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'j' {
-				x = -0.1
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'k' {
-				y = -0.1
-				b.SetVelocity(x, y, z)
-			} else if ev.Ch == 'l' {
-				x = 0.1
-				b.SetVelocity(x, y, z)
+	done := false
+	go func() {
+		defer func() { done = true }()
+
+		// initialize some variables
+		x := float64(0.0)
+		y := float64(0.0)
+		z := float64(0.35)
+
+		for {
+			switch ev := termbox.PollEvent(); ev.Type {
+			case termbox.EventKey:
+				if ev.Ch == 'q' {
+					fmt.Println("shutting down")
+					done = true
+					return
+				} else if ev.Ch == ';' {
+					b.Arm()
+				} else if ev.Key == termbox.KeySpace {
+					b.Disarm()
+				} else if ev.Ch == 't' {
+					b.Takeoff()
+				} else if ev.Ch == 'p' {
+					b.Position()
+				} else if ev.Ch == 'r' {
+					b.ResetPosition()
+				} else if ev.Ch == 'w' {
+					z += 0.05
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'a' {
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 's' {
+					z -= 0.05
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'd' {
+					x = 0.1
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'h' {
+					x = 0
+					y = 0
+					z = DefaultHeight
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'i' {
+					y = 0.1
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'j' {
+					x = -0.1
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'k' {
+					y = -0.1
+					b.SetVelocity(x, y, z)
+				} else if ev.Ch == 'l' {
+					x = 0.1
+					b.SetVelocity(x, y, z)
+				}
 			}
 		}
+	}()
+
+	for !done {
+		// TODO: refresh screen with values
+		refresh(b)
+		time.Sleep(75 * time.Millisecond)
 	}
 
+	return nil
+}
+
+func main() {
+	if err := doInput(); err != nil {
+		fmt.Fprintf(os.Stderr, "err doing input: %v\n", err)
+		os.Exit(1)
+	}
 }

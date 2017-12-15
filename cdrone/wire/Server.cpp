@@ -44,8 +44,7 @@ void Server::cleanup() {
 	}
 }
 
-std::pair<google::protobuf::io::ZeroCopyInputStream*,
-	google::protobuf::io::ZeroCopyOutputStream*> Server::accept() {
+std::shared_ptr<IO> Server::accept() {
 	int client_fd;
 
 	if ((client_fd = ::accept(m_server_fd, NULL, NULL)) < 0)
@@ -59,8 +58,10 @@ std::pair<google::protobuf::io::ZeroCopyInputStream*,
 		return std::make_pair(SSLInputStream(ssl), SSLOutputStream(ssl));
 	}
 	*/
-	return std::make_pair(new google::protobuf::io::FileInputStream(client_fd),
-						new google::protobuf::io::FileOutputStream(client_fd));
+	// return std::make_shared<IO>(
+	// 		new google::protobuf::io::FileInputStream(client_fd),
+	//		new google::protobuf::io::FileOutputStream(client_fd));
+	return std::make_shared<IO>(client_fd);
 }
 
 // TODO: make non-blocking

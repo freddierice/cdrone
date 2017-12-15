@@ -31,119 +31,183 @@ void do_update(Watchdog &watchdog, Infrared &infrared) {
 	watchdog.stop();
 }
 
-void do_io(Watchdog &watchdog, Config &config, 
-		FlightController &flightController, 
+void do_recv(Watchdog &watchdog, Config &config, 
+		FlightController &flightController,
+		std::shared_ptr<IO> io,
 		std::shared_ptr<Observations> obs, Camera &camera) {
+	proto::Update update;
 
-	console->info("initializing io server");
-	while (!shutdown) {
-		// wait for someone to connect.
-		watchdog.stop();
-		IOController ioController(config);
-		while (!shutdown && !ioController.connected()) {
-			try {
-				ioController.accept();
-			} catch (ServerException &ex) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			}
-		}
-
-		console->info("io loop started");
-		watchdog.start();
-		while (!shutdown) {
-			proto::Update update;
-			try {
-				ioController.getMessage(update);
-				watchdog.ok();
-			} catch (IOControllerException &ex) {
-				console->info("connection closed: {}", ex.what());
-				flightController.disarm();
-				break;
-			}
-			
-			// check the update mode
-			switch (update.mode()) {
-				case proto::NO_MODE:
-					break;
-				case proto::ARM:
-					console->info("io ARM");
-					flightController.arm();
-					break;
-				case proto::DISARM:
-					console->info("io DISARM");
-					flightController.disarm();
-					obs->resetIO();
-					break;
-				case proto::TAKEOFF:
-					flightController.takeoff();
-					break;
-				case proto::RAW:
-					flightController.rawControl();
-					break;
-				case proto::VELOCITY:
-					flightController.velocityControl();
-					break;
-				case proto::POSITION:
-					flightController.positionControl();
-					break;
-				default:
-					console->warn("received unknown mode {}", update.mode());
-					break;
-			}
-
-			// check for any commands.
-			switch (update.cmd()) {
-				case proto::NO_COMMAND:
-					break;
-				case proto::RESET_POSITION:
-					console->info("io RESET_POSITION");
-					camera.resetPosition();
-					break;
-				default:
-					console->warn("got unknown UpdateCommand");
-			}
-			
-			// check the raw mode
-			if (update.has_raw()) {
-				auto raw = update.raw();
-				obs->ioRawRoll = raw.roll();
-				obs->ioRawPitch = raw.pitch();
-				obs->ioRawYaw = raw.yaw();
-				obs->ioRawThrottle = raw.throttle();
-			}
-
-			// check the velocity mode
-			if (update.has_velocity()) {
-				auto velocity = update.velocity();
-				obs->ioVelocityX = velocity.x();
-				obs->ioVelocityY = velocity.y();
-				obs->ioPositionZ = velocity.z();
-			}
-
-			// check the position mode
-			if (update.has_position()) {
-				auto position = update.position();
-				obs->ioPositionX = position.x();
-				obs->ioPositionY = position.y();
-				obs->ioPositionZ = position.z();
-			}
-		}
+	// try to get the first message before starting the watchdog.
+	try {
+		while(!io->recvMessage(update) && !shutdown)
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	} catch (IOException &ex) {
+		console->info("error recieving: {}", ex.what());
+		return;
 	}
-	watchdog.stop();
-}
-
-/*
-void do_analysis(Watchdog &watchdog, Config &config) {
-
-	console->info("analysis loop started");
+	
+	console->info("recv loop started");
 	watchdog.start();
 	while (!shutdown) {
-		watchdog.ok();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		// check the update mode
+		switch (update.mode()) {
+			case proto::NO_MODE:
+				break;
+			case proto::ARM:
+				console->info("io ARM");
+				flightController.arm();
+				break;
+			case proto::DISARM:
+				console->info("io DISARM");
+				flightController.disarm();
+				obs->resetIO();
+				break;
+			case proto::TAKEOFF:
+				flightController.takeoff();
+				break;
+			case proto::RAW:
+				flightController.rawControl();
+				break;
+			case proto::VELOCITY:
+				flightController.velocityControl();
+				break;
+			case proto::POSITION:
+				flightController.positionControl();
+				break;
+			default:
+				console->warn("received unknown mode {}", update.mode());
+				break;
+		}
+
+		// check for any commands.
+		switch (update.command()) {
+			case proto::NO_COMMAND:
+				break;
+			case proto::RESET_POSITION:
+				console->info("io RESET_POSITION");
+				camera.resetPosition();
+				break;
+			case proto::DISCONNECT:
+				flightController.disarm();
+				watchdog.stop();
+				return;
+			default:
+				console->warn("got unknown UpdateCommand");
+		}
+		
+		// check the raw mode
+		if (update.has_raw()) {
+			auto raw = update.raw();
+			obs->ioRawRoll = raw.roll();
+			obs->ioRawPitch = raw.pitch();
+			obs->ioRawYaw = raw.yaw();
+			obs->ioRawThrottle = raw.throttle();
+		}
+
+		// check the velocity mode
+		if (update.has_velocity()) {
+			auto velocity = update.velocity();
+			obs->ioVelocityX = velocity.x();
+			obs->ioVelocityY = velocity.y();
+			obs->ioPositionZ = velocity.z();
+		}
+
+		// check the position mode
+		if (update.has_position()) {
+			auto position = update.position();
+			obs->ioPositionX = position.x();
+			obs->ioPositionY = position.y();
+			obs->ioPositionZ = position.z();
+		}
+		
+		// get another message
+		try {
+			watchdog.ok();
+			update.Clear();
+			while(!io->recvMessage(update) && !shutdown)
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			watchdog.ok();
+		} catch (IOException &ex) {
+			console->info("error recieving: {}", ex.what());
+			flightController.disarm();
+			watchdog.stop();
+			return;
+		}
 	}
 	watchdog.stop();
 }
-*/
+
+void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
+		FlightController &flightController) {
+	proto::Observations protoObs;
+
+	console->info("send loop started");
+	while (!shutdown) {
+		protoObs.Clear();
+		protoObs.set_battery(obs->skylineBattery);
+		auto mode = flightController.getMode();
+		switch (mode) {
+			case Disarmed:
+			case Disarming:
+				protoObs.set_mode(proto::DISARM);
+				break;
+			case Arming:
+			case Armed:
+				protoObs.set_mode(proto::ARM);
+				break;
+			case TakeOff:
+				protoObs.set_mode(proto::TAKEOFF);
+				break;
+			case TouchDown:
+				protoObs.set_mode(proto::TOUCHDOWN);
+				break;
+			case RawControl:
+				protoObs.set_mode(proto::RAW);
+				break;
+			case VelocityControl:
+				protoObs.set_mode(proto::VELOCITY);
+				break;
+			case PositionControl:
+				protoObs.set_mode(proto::POSITION);
+				break;
+			case Calibrating:
+				protoObs.set_mode(proto::CALIBRATE);
+			default:
+				// do nothing
+				break;
+		}
+		try {
+			io->sendMessage(protoObs);
+		} catch (IOException &ex) {
+			console->warn("could not send message: {}", ex.what());
+			return;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
+
+void do_serve(Watchdog &watchdog, Config &config,
+		IOController &ioController,
+		FlightController &flightController,
+		std::shared_ptr<Observations> obs, Camera &camera) {
+	while (!shutdown) {
+		try {
+			std::shared_ptr<IO> io = ioController.accept();
+			console->info("server accepted");
+			std::thread recv_thr(do_recv, std::ref(watchdog), std::ref(config),
+					std::ref(flightController), io, obs,
+					std::ref(camera));
+			std::thread send_thr(do_send, io, obs,
+					std::ref(flightController));
+			recv_thr.join();
+			console->info("recv joined");
+			send_thr.join();
+			console->info("send joined");
+		} catch (IOControllerException &ex) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+	}
+}
 
 void do_controller(Watchdog &watchdog, Config &config, 
 		FlightController &flightController) {
@@ -166,19 +230,26 @@ void cdrone(Config &config) {
 	console->info("initializing watchdogs");
 	Watchdog updateWatchdog(config.updateWatchdog(), "update");
 	Watchdog ioWatchdog(config.ioWatchdog(), "io");
-	// Watchdog analysisWatchdog(config.analysisWatchdog(), "analysis");
 	Watchdog controllerWatchdog(config.controllerWatchdog(), "controller");
 
 	// initialize the observations
 	std::shared_ptr<Observations> obs = std::make_shared<Observations>();
 	
 	// initialize the hardware
-	console->info("initializing infrared");
-	FlightController flightController(config, obs);
+	console->info("initializing Infrared");
 	Infrared infrared(config, obs);
+
+	console->info("initializing FlightController");
+	FlightController flightController(config, obs);
+
+	console->info("initializing IOController");
+	IOController ioController(config);
+
+	console->info("initializing Camera");
 	Camera camera(config, obs);
 
 	// start camera
+	console->info("starting Camera");
 	camera.start();
 
 	// create threads
@@ -186,21 +257,18 @@ void cdrone(Config &config) {
 	pthread_block(SIGINT);
 	std::thread update_thr(do_update, std::ref(updateWatchdog), 
 			std::ref(infrared));
-	// std::thread analysis_thr(do_analysis, std::ref(analysisWatchdog), 
-	//		std::ref(config));
-	std::thread io_thr(do_io, std::ref(ioWatchdog), std::ref(config),
-			std::ref(flightController), obs, std::ref(camera));
 	std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
 			std::ref(config), std::ref(flightController));
+	std::thread serve_thr(do_serve, std::ref(ioWatchdog), std::ref(config),
+			std::ref(ioController), std::ref(flightController), obs,
+			std::ref(camera));
 	pthread_unblock(SIGINT);
 	
 	// join with threads
 	update_thr.join(); 
 	console->info("update thread joined");
-	io_thr.join();
+	serve_thr.join();
 	console->info("io thread joined");
-	// analysis_thr.join(); 
-	// console->info("analysis thread joined");
 	controller_thr.join();
 	console->info("controller thread joined");
 	

@@ -14,7 +14,7 @@ func (b *Base) setMode(mode proto.Mode) {
 // setCommand gives the drone a command
 func (b *Base) setCommand(command proto.Command) {
 	b.messageChan <- &proto.Update{
-		Cmd: command,
+		Command: command,
 	}
 }
 

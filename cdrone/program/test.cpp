@@ -95,6 +95,7 @@ void test_watchdog(Config &config) {
 
 void test_ssl(Config &config) try {
 
+	/*
 	const void *buf;
 	int len;
 	Server server(config);
@@ -106,6 +107,7 @@ void test_ssl(Config &config) try {
 		std::string recieved((const char *)buf, (size_t)len);
 		console->info("recieved: {}", recieved);
 	}
+	*/
 
 } catch(ServerException &ex) {
 	console->error("could not start server: {}", ex.what());

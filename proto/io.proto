@@ -27,15 +27,17 @@ enum Mode {
 	ARM = 1;
 	DISARM = 2;
 	TAKEOFF = 3;
-	LAND = 4;
+	TOUCHDOWN = 4;
 	RAW = 5;
 	VELOCITY = 6;
 	POSITION = 7;
+	CALIBRATE = 8;
 };
 
 enum Command {
 	NO_COMMAND = 0;
 	RESET_POSITION = 1;
+	DISCONNECT = 2;
 }
 
 message Update {
@@ -52,6 +54,10 @@ message Update {
 	Mode mode = 4;
 
 	// Command tells the drone to do some asynchronous task.
-	Command cmd = 5;
+	Command command = 5;
 }
 
+message Observations {
+	Mode mode = 1;
+	double battery = 2;
+}

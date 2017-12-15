@@ -1,11 +1,14 @@
-#include "utility.h"
+#include <arpa/inet.h>
 #include <signal.h>
+#include <string.h>
+#include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <string.h>
+
+#include "misc/utility.h"
+
 #include <spdlog/spdlog.h>
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
@@ -30,3 +33,17 @@ double get_time() {
 	return (double)ts.tv_sec + ((double)ts.tv_nsec)/1000000000;
 }
 
+int writeFull(int fd, const char *buffer, int len) {
+	int ret, total = 0;
+	do {
+again:
+		if ((ret = write(fd, buffer+total, len-total)) < 0) {
+			if (errno == EINTR || errno == EAGAIN)
+				goto again;
+			return ret;
+		}
+		total += ret;
+	} while(len != total);
+
+	return total;
+}

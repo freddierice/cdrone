@@ -1,5 +1,6 @@
 #ifndef __SERVER_H__
 #define __SERVER_H__
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -8,8 +9,7 @@
 
 #include "misc/Config.h"
 #include "misc/exception.h"
-
-#include <google/protobuf/io/zero_copy_stream.h>
+#include "wire/IO.h"
 
 #include <openssl/ssl.h>
 
@@ -20,8 +20,7 @@ public:
 	Server(Config &config);
 	~Server();
 
-	std::pair<google::protobuf::io::ZeroCopyInputStream*,
-		google::protobuf::io::ZeroCopyOutputStream*> accept();
+	std::shared_ptr<IO> accept();
 	void reset();
 
 private:

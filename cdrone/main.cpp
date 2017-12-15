@@ -23,6 +23,7 @@ void shutdown_handler(int sig) {
 	console->warn("shutting down");
 }
 void setup_signals() {
+	signal(SIGPIPE, SIG_IGN);
 	signal(SIGINT, shutdown_handler);
 }
 void setup_ssl() {

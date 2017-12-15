@@ -3,6 +3,7 @@ package base
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,10 +18,17 @@ import (
 
 // Base holds a connection to a base.
 type Base struct {
+	Drone
 	conn        net.Conn
 	stop        bool
 	messageChan chan protobuf.Message
 	wg          *sync.WaitGroup
+}
+
+// Drone holds information sent down from the drone.
+type Drone struct {
+	Battery float64
+	Mode    proto.Mode
 }
 
 // Config holds configurations for a Base.
@@ -107,8 +115,14 @@ func New(config Config) (*Base, error) {
 	// start the heartbeats for the life of this base.
 	messageChan := make(chan protobuf.Message, 10)
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 	defer func() {
+		go func() {
+			defer wg.Done()
+			for !base.stop {
+				base.RecvMessage()
+			}
+		}()
 		go func() {
 			defer wg.Done()
 			for pb := range messageChan {
@@ -120,6 +134,11 @@ func New(config Config) (*Base, error) {
 		go func() {
 			defer wg.Done()
 			defer close(messageChan)
+			defer func() {
+				messageChan <- &proto.Update{
+					Command: proto.Command_DISCONNECT,
+				}
+			}()
 			for !base.stop {
 				time.Sleep(100 * time.Millisecond)
 				messageChan <- &proto.Update{
@@ -150,14 +169,13 @@ func writeFull(w io.Writer, buf []byte) error {
 
 // SendMessage sends a protobuf message to the drone.
 func (base *Base) SendMessage(pb protobuf.Message) error {
-	pbLen := protobuf.Size(pb)
 	buf, err := protobuf.Marshal(pb)
 	if err != nil {
 		return err
 	}
 
-	lenBuf := protobuf.EncodeVarint(uint64(pbLen))
-	if err := writeFull(base.conn, lenBuf); err != nil {
+	lenBuf := uint32(len(buf))
+	if err := binary.Write(base.conn, binary.LittleEndian, lenBuf); err != nil {
 		return err
 	}
 	if err := writeFull(base.conn, buf); err != nil {
@@ -165,6 +183,32 @@ func (base *Base) SendMessage(pb protobuf.Message) error {
 	}
 
 	return nil
+}
+
+// RecvMessage recieves a message from the drone.
+func (base *Base) RecvMessage() {
+	// read first uint32
+	numBuf := make([]byte, 4)
+	if _, err := io.ReadFull(base.conn, numBuf); err != nil {
+		return
+	}
+	messageLen := binary.LittleEndian.Uint32(numBuf)
+
+	// read the entire message
+	buf := make([]byte, messageLen)
+	if _, err := io.ReadFull(base.conn, buf); err != nil {
+		return
+	}
+
+	// unmarshal the message
+	obs := &proto.Observations{}
+	if err := protobuf.Unmarshal(buf, obs); err != nil {
+		return
+	}
+
+	// update values
+	base.Drone.Mode = obs.Mode
+	base.Drone.Battery = obs.Battery
 }
 
 // Close closes a connection to the drone.
