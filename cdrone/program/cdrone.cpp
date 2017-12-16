@@ -62,15 +62,19 @@ void do_recv(Watchdog &watchdog, Config &config,
 				obs->resetIO();
 				break;
 			case proto::TAKEOFF:
+				console->info("io TAKEOFF");
 				flightController.takeoff();
 				break;
 			case proto::RAW:
+				console->info("io RAW");
 				flightController.rawControl();
 				break;
 			case proto::VELOCITY:
+				console->info("io VELOCITY");
 				flightController.velocityControl();
 				break;
 			case proto::POSITION:
+				console->info("io POSITION");
 				flightController.positionControl();
 				break;
 			default:

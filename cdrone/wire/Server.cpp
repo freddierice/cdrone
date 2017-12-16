@@ -29,7 +29,7 @@ void Server::reset() {
 }
 
 void Server::init() {
-	m_ctx = ssl_create_context(m_certificate.c_str(), m_key.c_str());
+	// m_ctx = ssl_create_context(m_certificate.c_str(), m_key.c_str());
 	m_server_fd = create_socket(m_port);
 }
 
@@ -38,10 +38,12 @@ void Server::cleanup() {
 		::close(m_server_fd);
 		m_server_fd = 0;
 	}
+	/*
 	if (m_ctx) {
 		SSL_CTX_free(m_ctx);
 		m_ctx = (SSL_CTX*)0;
 	}
+	*/
 }
 
 std::shared_ptr<IO> Server::accept() {

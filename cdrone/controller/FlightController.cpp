@@ -7,11 +7,13 @@
 FlightController::FlightController(Config &config,
 		std::shared_ptr<Observations> obs) : m_obs(obs), m_mode(Disarmed),
 	m_lastModeChange(std::chrono::high_resolution_clock::now()),
-	m_skyline(config, obs), m_rollPID(config.rollPIDP(), config.rollPIDI(),
+	m_skyline(config, obs), m_posX(0.0), m_posY(0.0),
+	m_rollPID(config.rollPIDP(), config.rollPIDI(),
 			config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 		   config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
-			config.throttlePIDD(), 1395, 1100, 1900) {
+			config.throttlePIDD(), 1395, 1100, 1900), 
+	m_posXPID(-0.02, -0.001, 0, 0, -0.15, 0.15), m_posYPID(-0.02, -0.001, 0, 0, -0.15, 0.15) {
 }
 
 FlightMode FlightController::getMode() {
@@ -49,7 +51,7 @@ void FlightController::velocityControl() {
 
 void FlightController::positionControl() {
 	auto mode = getMode();
-	if (mode == RawControl || mode == PositionControl)
+	if (mode == RawControl || mode == VelocityControl)
 		setMode(PositionControl);
 }
 
@@ -65,7 +67,7 @@ void FlightController::calibrate() {
 
 void FlightController::update() {
 	uint16_t roll, pitch, throttle;
-	// double x, y;
+	double vx, vy;
 	std::chrono::high_resolution_clock::time_point then, now;
 	FlightMode mode;
 
@@ -120,7 +122,15 @@ void FlightController::update() {
 			m_skyline.sendRC(roll, pitch, 1500, throttle);
 			break;
 		case FlightMode::PositionControl:
-			setMode(VelocityControl);
+			// use pos pid to get velocity targets.
+			vx = m_posXPID.step(m_obs->cameraPositionX - m_posX);
+			vy = m_posYPID.step(m_obs->cameraPositionY - m_posY);
+
+			// use velocity targets to reach velocities.
+			roll = (uint16_t)m_rollPID.step(m_obs->cameraVelocityX - vx);
+			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraVelocityY - vy);
+			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - m_obs->ioPositionZ);
+			m_skyline.sendRC(roll, pitch, 1500, throttle);
 			break;
 		case FlightMode::Armed:
 			m_skyline.sendIdle();

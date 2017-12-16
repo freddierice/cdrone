@@ -75,9 +75,13 @@ private:
 	FlightController();
 	void setMode(FlightMode m);
 
+	std::atomic<double> m_posX, m_posY;
+
 	PID m_rollPID;
 	PID m_pitchPID;
 	PID m_throttlePID;
+	PID m_posXPID;
+	PID m_posYPID;
 };
 
 #endif /* __FLIGHT_CONTROLLER_H__ */

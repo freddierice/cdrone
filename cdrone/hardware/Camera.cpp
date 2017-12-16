@@ -406,18 +406,20 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		// we could not compare to first frame, lets now compare to previous
 		estimate = cv::estimateRigidTransform(camera->m_previousFrame,
 				camera->m_currentFrame, false);
-		x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
-		y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
-		
-		// add the delta
-		camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
-		camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
+		if (!estimate.empty()) {
+			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
+			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+			
+			// add the delta
+			camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
+			camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
+		}
 
+done:
 		// copy current frame to the previous
 		::memcpy(camera->m_previousFrameBuffer, camera->m_currentFrameBuffer, camera->m_frameBufferLength);
 	}
 
-done:
 	mmal_buffer_header_release(buffer);
 	if (port->is_enabled) {
 		buffer = mmal_queue_get(camera->m_splitterPool->queue);
