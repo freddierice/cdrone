@@ -14,10 +14,11 @@ public:
 	cameraPositionY(0.0), cameraPositionYaw(0.0), skylineBattery(0.0),
 	skylineAccX(0.0), skylineAccY(0.0), skylineAccZ(0.0), skylineGyroX(0.0),
 	skylineGyroY(0.0), skylineGyroZ(0.0), skylineAngRoll(0.0), skylineAngPitch(0.0),
-	skylineAngYaw(0.0), skylineAngRollVel(0.0), skylineAngPitchVel(0.0),
-	skylineAngYawVel(0.0), ioRawRoll(1500), ioRawPitch(1500), ioRawYaw(1500), 
-	ioRawThrottle(1000), ioVelocityX(0.0), ioVelocityY(0.0), ioPositionX(0.0),
-	ioPositionY(0.0), ioPositionZ(0.35) {}
+	skylineAngYaw(0.0), skylineDAngRoll(0.0), skylineDAngPitch(0.0), skylineDAngYaw(0.0), 
+	skylineAngRollVel(0.0), skylineAngPitchVel(0.0), skylineAngYawVel(0.0),
+	ioRawRoll(1500), ioRawPitch(1500), ioRawYaw(1500), ioRawThrottle(1000),
+	ioVelocityX(0.0), ioVelocityY(0.0), ioPositionX(0.0), ioPositionY(0.0),
+	ioPositionZ(0.35) {}
 
 	// Infrared writes here
 	std::atomic<double> infraredHeight;
@@ -41,6 +42,9 @@ public:
 	std::atomic<double> skylineAngRoll;
 	std::atomic<double> skylineAngPitch;
 	std::atomic<double> skylineAngYaw;
+	std::atomic<double> skylineDAngRoll;
+	std::atomic<double> skylineDAngPitch;
+	std::atomic<double> skylineDAngYaw;
 	std::atomic<double> skylineAngRollVel;
 	std::atomic<double> skylineAngPitchVel;
 	std::atomic<double> skylineAngYawVel;

@@ -86,7 +86,7 @@ void Skyline::update() {
 
 	// try to get the readings every few updates.
 	m_ticks++;
-	if (m_ticks > 3) {
+	if (m_ticks > 2) {
 		m_ticks = 0;
 		sendAttitude();
 		sendIMU();
@@ -106,18 +106,27 @@ void Skyline::update() {
 				break;
 			case MSP_ATTITUDE:
 				attitude = (MSP_ATTITUDE_T *)resp.m_data;
-				lastRoll = m_obs->skylineAngRoll;
-				lastPitch = m_obs->skylineAngPitch;
-				lastYaw = m_obs->skylineAngYaw;
-				m_obs->skylineAngRoll = (double)attitude->angx/180.0 * M_PI;
-				m_obs->skylineAngPitch = (double)attitude->angy/180.0 * M_PI;
-				m_obs->skylineAngYaw = (double)attitude->heading/180.0 * M_PI;
+				// update time
 				now = ::get_time();
 				dt = now - m_lastAttitudeTime;
 				m_lastAttitudeTime = now;
+				
+				// update the last vars
+				lastRoll = m_obs->skylineAngRoll;
+				lastPitch = m_obs->skylineAngPitch;
+				lastYaw = m_obs->skylineAngYaw;
+
+				// update the now vars
+				m_obs->skylineAngRoll = (double)attitude->angx/180.0 * M_PI;
+				m_obs->skylineAngPitch = (double)attitude->angy/180.0 * M_PI;
+				m_obs->skylineAngYaw = (double)attitude->heading/180.0 * M_PI;
+				m_obs->skylineDAngRoll = m_obs->skylineAngRoll - lastRoll;
+				m_obs->skylineDAngPitch = m_obs->skylineAngPitch - lastPitch;
+				m_obs->skylineDAngYaw = m_obs->skylineAngYaw - lastYaw;
 				m_obs->skylineAngRollVel = (m_obs->skylineAngRoll - lastRoll)/dt;
 				m_obs->skylineAngPitchVel = (m_obs->skylineAngPitch - lastPitch)/dt;
 				m_obs->skylineAngYawVel = (m_obs->skylineAngYaw - lastYaw)/dt;
+
 				m_attitudeFlag = false;
 				break;
 			case MSP_ANALOG:

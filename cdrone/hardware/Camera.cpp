@@ -333,10 +333,10 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		// normalize the motion and use lazy motion blur
 		x_motion /= camera->m_blocks;
 		y_motion /= -camera->m_blocks;
-		x_motion *= 0.025;
-		y_motion *= 0.025;
-		// x_motion -= tan(camera->m_obs->skylineAngRollVel/30.0);
-		// y_motion -= tan(camera->m_obs->skylineAngPitchVel/30.0);
+		x_motion *= 0.05;
+		y_motion *= 0.05;
+		x_motion -= tan(camera->m_obs->skylineDAngRoll) * camera->m_obs->infraredHeight * 0.0001;
+		y_motion -= tan(camera->m_obs->skylineDAngPitch) * camera->m_obs->infraredHeight * 0.0001;
 		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityX;
 		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityY;
 
@@ -632,4 +632,4 @@ void Camera::cameraSetDefaults(MMAL_COMPONENT_T *camera) {
 }
 
 // constants
-const double Camera::ALPHA = 0.2;
+const double Camera::ALPHA = 0.1;

@@ -27,13 +27,15 @@ type Base struct {
 
 // Drone holds information sent down from the drone.
 type Drone struct {
-	Battery         float64
-	Mode            proto.Mode
-	CameraVelocityX float64
-	CameraVelocityY float64
-	CameraPositionX float64
-	CameraPositionY float64
-	InfraredHeight  float64
+	Battery            float64
+	Mode               proto.Mode
+	CameraVelocityX    float64
+	CameraVelocityY    float64
+	CameraPositionX    float64
+	CameraPositionY    float64
+	InfraredHeight     float64
+	SkylineAngRollVel  float64
+	SkylineAngPitchVel float64
 }
 
 // Config holds configurations for a Base.
@@ -219,6 +221,8 @@ func (base *Base) RecvMessage() {
 	base.Drone.CameraPositionX = obs.CameraPositionX
 	base.Drone.CameraPositionY = obs.CameraPositionY
 	base.Drone.InfraredHeight = obs.InfraredHeight
+	base.Drone.SkylineAngRollVel = obs.SkylineAngRollVel
+	base.Drone.SkylineAngPitchVel = obs.SkylineAngPitchVel
 }
 
 // Close closes a connection to the drone.

@@ -13,6 +13,9 @@ import (
 // DefaultHeight holds the initial height of the drone in meters.
 const DefaultHeight = 0.35
 
+// VelocityStep holds the step size for the velocity.
+const VelocityStep = 0.2
+
 func printAt(x, y int, s string) {
 	for _, r := range s {
 		termbox.SetCell(x, y, r, termbox.ColorWhite, termbox.ColorBlack)
@@ -48,6 +51,8 @@ func refresh(b *base.Base) {
 	printAt(40, 4, fmt.Sprintf("CameraVelocityY: %v", b.Drone.CameraVelocityY))
 	printAt(40, 5, fmt.Sprintf("CameraPositionX: %v", b.Drone.CameraPositionX))
 	printAt(40, 6, fmt.Sprintf("CameraPositionY: %v", b.Drone.CameraPositionY))
+	printAt(40, 7, fmt.Sprintf("AngRollVel: %v", b.Drone.SkylineAngRollVel))
+	printAt(40, 8, fmt.Sprintf("AngPitchVel: %v", b.Drone.SkylineAngPitchVel))
 
 	termbox.Flush()
 }
@@ -117,20 +122,20 @@ func doInput() error {
 						z -= 0.05
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'd' {
-						vx = 0.1
+						vx = VelocityStep
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'h' {
 						vx = 0
 						vy = 0
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'i' {
-						vy = 0.1
+						vy = VelocityStep
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'j' {
-						vx = -0.1
+						vx = -VelocityStep
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'k' {
-						vy = -0.1
+						vy = -VelocityStep
 						b.SetVelocity(vx, vy, z)
 					} else if ev.Ch == 'l' {
 						vx = 0.1

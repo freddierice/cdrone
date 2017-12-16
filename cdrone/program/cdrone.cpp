@@ -149,6 +149,8 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 		protoObs.set_camera_position_x(obs->cameraPositionX);
 		protoObs.set_camera_position_y(obs->cameraPositionY);
 		protoObs.set_infrared_height(obs->infraredHeight);
+		protoObs.set_skyline_ang_roll_vel(obs->skylineAngRollVel);
+		protoObs.set_skyline_ang_pitch_vel(obs->skylineAngPitchVel);
 		auto mode = flightController.getMode();
 		switch (mode) {
 			case Disarmed:

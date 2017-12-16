@@ -114,8 +114,8 @@ void FlightController::update() {
 					m_obs->ioRawYaw, m_obs->ioRawThrottle);
 			break;
 		case FlightMode::VelocityControl:
-			roll = (uint16_t)m_rollPID.step(m_obs->cameraMotionX - m_obs->ioVelocityX);
-			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraMotionY - m_obs->ioVelocityY);
+			roll = (uint16_t)m_rollPID.step(m_obs->cameraVelocityX - m_obs->ioVelocityX);
+			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraVelocityY - m_obs->ioVelocityY);
 			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - m_obs->ioPositionZ);
 			m_skyline.sendRC(roll, pitch, 1500, throttle);
 			break;
