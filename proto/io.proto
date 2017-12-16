@@ -60,4 +60,9 @@ message Update {
 message Observations {
 	Mode mode = 1;
 	double battery = 2;
+	double camera_velocity_x = 3;
+	double camera_velocity_y = 4;
+	double camera_position_x = 5;
+	double camera_position_y = 6;
+	double infrared_height = 7;
 }
