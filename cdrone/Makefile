@@ -5,7 +5,7 @@ LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lbcm_host -lmmal -lmmal_core -lmmal_c
 TARGET:=cdrone
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))
-all: $(PROTOS) $(TARGET)
+all: proto $(PROTOS) $(TARGET)
 
 #MODULES=controller hardware json programs wire
 OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */*.cc)) main.o proto/io.pb.o
@@ -18,6 +18,9 @@ OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */
 
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
+
+proto:
+	@mkdir proto
 
 proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
 	protoc -I=../proto --cpp_out=proto $<
