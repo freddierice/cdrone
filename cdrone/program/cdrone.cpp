@@ -39,8 +39,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 
 	// try to get the first message before starting the watchdog.
 	try {
-		while(!io->recvMessage(update) && !shutdown)
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		while(!io->recvMessage(update) && !shutdown) {}
 	} catch (IOException &ex) {
 		console->info("error recieving: {}", ex.what());
 		return;
@@ -85,6 +84,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 				break;
 			case proto::RESET_POSITION:
 				console->info("io RESET_POSITION");
+				camera.enablePosition();
 				camera.resetPosition();
 				break;
 			case proto::DISCONNECT:
@@ -124,8 +124,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 		try {
 			watchdog.ok();
 			update.Clear();
-			while(!io->recvMessage(update) && !shutdown)
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			while(!io->recvMessage(update) && !shutdown) {}
 			watchdog.ok();
 		} catch (IOException &ex) {
 			console->info("error recieving: {}", ex.what());
@@ -145,6 +144,11 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 	while (!shutdown) {
 		protoObs.Clear();
 		protoObs.set_battery(obs->skylineBattery);
+		protoObs.set_camera_velocity_x(obs->cameraVelocityX);
+		protoObs.set_camera_velocity_y(obs->cameraVelocityY);
+		protoObs.set_camera_position_x(obs->cameraPositionX);
+		protoObs.set_camera_position_y(obs->cameraPositionY);
+		protoObs.set_infrared_height(obs->infraredHeight);
 		auto mode = flightController.getMode();
 		switch (mode) {
 			case Disarmed:
@@ -182,7 +186,7 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 			console->warn("could not send message: {}", ex.what());
 			return;
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 }
 
@@ -219,7 +223,7 @@ void do_controller(Watchdog &watchdog, Config &config,
 	while (!shutdown) {
 		watchdog.ok();
 		flightController.update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	}
 	watchdog.stop();
 }

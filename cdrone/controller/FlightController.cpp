@@ -5,14 +5,13 @@
 
 
 FlightController::FlightController(Config &config,
-		std::shared_ptr<Observations> obs) : m_obs(obs), 
+		std::shared_ptr<Observations> obs) : m_obs(obs), m_mode(Disarmed),
 	m_lastModeChange(std::chrono::high_resolution_clock::now()),
 	m_skyline(config, obs), m_rollPID(config.rollPIDP(), config.rollPIDI(),
 			config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 		   config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
 			config.throttlePIDD(), 1395, 1100, 1900) {
-	m_mode = Disarmed;
 }
 
 FlightMode FlightController::getMode() {
@@ -45,13 +44,13 @@ void FlightController::rawControl() {
 void FlightController::velocityControl() {
 	auto mode = getMode();
 	if (mode == RawControl || mode == PositionControl)
-		setMode(RawControl);
+		setMode(VelocityControl);
 }
 
 void FlightController::positionControl() {
 	auto mode = getMode();
 	if (mode == RawControl || mode == PositionControl)
-		setMode(RawControl);
+		setMode(PositionControl);
 }
 
 void FlightController::calibrate() {
@@ -61,6 +60,7 @@ void FlightController::calibrate() {
 	}
 	// m_mode = Calibrating;
 	m_skyline.sendCalibrate();
+	setMode(Calibrating);
 }
 
 void FlightController::update() {
@@ -94,12 +94,25 @@ void FlightController::update() {
 				m_throttlePID.reset();
 			}
 			break;
+		case FlightMode::Calibrating:
+			now = std::chrono::high_resolution_clock::now();
+			then = m_lastModeChange;
+			if (m_skyline.calibrateDone()) {
+				setMode(FlightMode::Disarmed);
+				break;
+			}
+			if (now - then > std::chrono::seconds(10)) {
+				console->warn("calibration taking too long. disarming.");
+				setMode(FlightMode::Disarmed);
+			}
+			break;
 		case FlightMode::TakeOff:
 			setMode(VelocityControl);
 			break;
 		case FlightMode::RawControl:
 			m_skyline.sendRC(m_obs->ioRawRoll, m_obs->ioRawPitch,
 					m_obs->ioRawYaw, m_obs->ioRawThrottle);
+			break;
 		case FlightMode::VelocityControl:
 			roll = (uint16_t)m_rollPID.step(m_obs->cameraMotionX - m_obs->ioVelocityX);
 			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraMotionY - m_obs->ioVelocityY);
@@ -108,6 +121,7 @@ void FlightController::update() {
 			break;
 		case FlightMode::PositionControl:
 			setMode(VelocityControl);
+			break;
 		case FlightMode::Armed:
 			m_skyline.sendIdle();
 			break;
@@ -119,6 +133,8 @@ void FlightController::update() {
 			//SPDLOG_DEBUG(spdlog::get("console"), "unhandled mode: {}", mode);
 			throw std::runtime_error("got into a bad mode");
 	}
+	
+	m_skyline.update();
 }
 
 void FlightController::setMode(FlightMode mode) {

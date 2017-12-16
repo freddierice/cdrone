@@ -10,22 +10,22 @@
 class Observations {
 public:
 	Observations() : infraredHeight(0.0), infraredVoltage(0.0),
-	cameraMotionX(0.0), cameraMotionY(0.0), cameraPositionX(0.0),
+	cameraVelocityX(0.0), cameraVelocityY(0.0), cameraPositionX(0.0),
 	cameraPositionY(0.0), cameraPositionYaw(0.0), skylineBattery(0.0),
 	skylineAccX(0.0), skylineAccY(0.0), skylineAccZ(0.0), skylineGyroX(0.0),
 	skylineGyroY(0.0), skylineGyroZ(0.0), skylineAngRoll(0.0), skylineAngPitch(0.0),
 	skylineAngYaw(0.0), skylineAngRollVel(0.0), skylineAngPitchVel(0.0),
 	skylineAngYawVel(0.0), ioRawRoll(1500), ioRawPitch(1500), ioRawYaw(1500), 
 	ioRawThrottle(1000), ioVelocityX(0.0), ioVelocityY(0.0), ioPositionX(0.0),
-	ioPositionY(0.0), ioPositionZ(0.30) {}
+	ioPositionY(0.0), ioPositionZ(0.35) {}
 
 	// Infrared writes here
 	std::atomic<double> infraredHeight;
 	std::atomic<double> infraredVoltage;
 
 	// Camera writes here
-	std::atomic<double> cameraMotionX;
-	std::atomic<double> cameraMotionY;
+	std::atomic<double> cameraVelocityX;
+	std::atomic<double> cameraVelocityY;
 	std::atomic<double> cameraPositionX;
 	std::atomic<double> cameraPositionY;
 	std::atomic<double> cameraPositionYaw;

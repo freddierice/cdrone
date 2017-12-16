@@ -1,6 +1,6 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++14 -g -Og # -O2
+CXX_FLAGS:=-Wall -std=c++14 -O2 #-g -Og -O2
 LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lopencv_core -lopencv_video -lopencv_imgcodecs # -latomic 
 TARGET:=cdrone
 

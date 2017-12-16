@@ -75,6 +75,9 @@ private:
 
 	// time
 	double m_lastAttitudeTime;
+
+	// ticks
+	int m_ticks;
 };
 
 #endif /* __SKYLINE_H__ */

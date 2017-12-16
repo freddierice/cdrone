@@ -1,3 +1,6 @@
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include "misc/logging.h"
 #include "misc/utility.h"
 #include "wire/IO.h"
@@ -6,6 +9,13 @@ IO::IO(int fd) : m_fd(fd), m_recvBufferLen(4096), m_sendBufferLen(4096),
 	m_recvBuffer(new char[m_recvBufferLen]),
 	m_sendBuffer(new char[m_sendBufferLen]),
 	m_recvBufferIter(m_recvBuffer), m_recvLen(0), m_connected(true) {
+	
+	// set timeout to 100 ms.
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+	if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(struct timeval)) < 0)
+		throw IOException("could not set timeout on socket");
 }
 
 IO::~IO() {

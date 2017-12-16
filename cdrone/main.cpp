@@ -58,7 +58,7 @@ int main(int argc, const char *argv[]) try {
 			console->info("starting test_watchdog");
 			test_watchdog(config);
 		} else if (!strcmp(program, "calibrate")) {
-			// TODO: calibrate
+			test_calibrate(config);
 		} else if (!strcmp(program, "ssl")) {
 			test_ssl(config);
 		} else if (!strcmp(program, "camera")) {

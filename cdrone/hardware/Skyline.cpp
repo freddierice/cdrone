@@ -6,7 +6,7 @@
 #include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
-		config.skylinePort()), m_multiwii(m_serial), m_obs(obs) {}
+		config.skylinePort()), m_multiwii(m_serial), m_obs(obs), m_ticks(0) {}
 Skyline::~Skyline() {}
 
 void Skyline::sendArm() {
@@ -84,10 +84,14 @@ void Skyline::update() {
 	double lastRoll, lastPitch, lastYaw;
 	double now, dt;
 
-	// try to get the readings every update.
-	sendAttitude();
-	sendIMU();
-	sendAnalog();
+	// try to get the readings every few updates.
+	m_ticks++;
+	if (m_ticks > 3) {
+		m_ticks = 0;
+		sendAttitude();
+		sendIMU();
+		sendAnalog();
+	}
 
 	// field at most 20 reads at a time
 	for (int i = 0; i < 20; i++) {
@@ -133,6 +137,7 @@ void Skyline::update() {
 				m_imuFlag = false;
 				break;
 			// ignore these
+			case MSP_SET_RAW_RC:
 			case MSP_STATUS:
 			case MSP_BOXIDS:
 			case MSP_SET_BOX:

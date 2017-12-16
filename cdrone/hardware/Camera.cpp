@@ -335,14 +335,14 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		y_motion /= -camera->m_blocks;
 		x_motion *= 0.025;
 		y_motion *= 0.025;
-		x_motion -= tan(camera->m_obs->skylineAngRollVel/30.0);
-		y_motion -= tan(camera->m_obs->skylineAngPitchVel/30.0);
-		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraMotionX;
-		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraMotionY;
+		// x_motion -= tan(camera->m_obs->skylineAngRollVel/30.0);
+		// y_motion -= tan(camera->m_obs->skylineAngPitchVel/30.0);
+		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityX;
+		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityY;
 
 		// set new motion
-		camera->m_obs->cameraMotionX = x_motion;
-		camera->m_obs->cameraMotionY = y_motion;
+		camera->m_obs->cameraVelocityX = x_motion;
+		camera->m_obs->cameraVelocityY = y_motion;
 	}
 	mmal_buffer_header_release(buffer);
 

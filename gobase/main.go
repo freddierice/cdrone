@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"./base"
+	"./proto"
 	termbox "github.com/nsf/termbox-go"
 )
 
@@ -43,6 +44,11 @@ func refresh(b *base.Base) {
 	printAt(40, 0, "VALUES")
 	printAt(40, 1, fmt.Sprintf("Battery: %v", b.Drone.Battery))
 	printAt(40, 2, fmt.Sprintf("Mode: %v", b.Drone.Mode))
+	printAt(40, 3, fmt.Sprintf("CameraVelocityX: %v", b.Drone.CameraVelocityX))
+	printAt(40, 4, fmt.Sprintf("CameraVelocityY: %v", b.Drone.CameraVelocityY))
+	printAt(40, 5, fmt.Sprintf("CameraPositionX: %v", b.Drone.CameraPositionX))
+	printAt(40, 6, fmt.Sprintf("CameraPositionY: %v", b.Drone.CameraPositionY))
+
 	termbox.Flush()
 }
 
@@ -75,9 +81,11 @@ func doInput() error {
 		defer func() { done = true }()
 
 		// initialize some variables
+		vx := float64(0.0)
+		vy := float64(0.0)
 		x := float64(0.0)
 		y := float64(0.0)
-		z := float64(0.35)
+		z := float64(DefaultHeight)
 
 		for {
 			switch ev := termbox.PollEvent(); ev.Type {
@@ -94,36 +102,65 @@ func doInput() error {
 					b.Takeoff()
 				} else if ev.Ch == 'p' {
 					b.Position()
+				} else if ev.Ch == 'v' {
+					b.Velocity()
 				} else if ev.Ch == 'r' {
 					b.ResetPosition()
-				} else if ev.Ch == 'w' {
-					z += 0.05
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'a' {
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 's' {
-					z -= 0.05
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'd' {
-					x = 0.1
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'h' {
-					x = 0
-					y = 0
-					z = DefaultHeight
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'i' {
-					y = 0.1
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'j' {
-					x = -0.1
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'k' {
-					y = -0.1
-					b.SetVelocity(x, y, z)
-				} else if ev.Ch == 'l' {
-					x = 0.1
-					b.SetVelocity(x, y, z)
+				}
+				if b.Drone.Mode == proto.Mode_VELOCITY {
+					if ev.Ch == 'w' {
+						z += 0.05
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'a' {
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 's' {
+						z -= 0.05
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'd' {
+						vx = 0.1
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'h' {
+						vx = 0
+						vy = 0
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'i' {
+						vy = 0.1
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'j' {
+						vx = -0.1
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'k' {
+						vy = -0.1
+						b.SetVelocity(vx, vy, z)
+					} else if ev.Ch == 'l' {
+						vx = 0.1
+						b.SetVelocity(vx, vy, z)
+					}
+				} else if b.Drone.Mode == proto.Mode_POSITION {
+					if ev.Ch == 'w' {
+						z += 0.05
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'a' {
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 's' {
+						z -= 0.05
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'd' {
+						x += 0.1
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'i' {
+						y += 0.1
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'j' {
+						x -= 0.1
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'k' {
+						y -= 0.1
+						b.SetPosition(x, y, z)
+					} else if ev.Ch == 'l' {
+						x += 0.1
+						b.SetPosition(x, y, z)
+					}
 				}
 			}
 		}

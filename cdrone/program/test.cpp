@@ -147,6 +147,24 @@ void test_camera(Config &config) {
 	}
 }
 
+void test_calibrate(Config &config) {
+	try {
+		console->info("initializing skyline");
+		auto obs = std::make_shared<Observations>();
+		Skyline skyline(config, obs);
+
+		console->info("sending calibrate");
+		skyline.sendCalibrate();
+		while (!shutdown && !skyline.calibrateDone()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			skyline.update();
+		}
+		console->info("got calibrate");
+	} catch (HardwareException &ex) {
+		console->error("got a hardware exception: {}", ex.what());
+	}
+}
+
 void test_skyline(Config &config) {
 	try {
 		console->info("initializing skyline");
@@ -155,9 +173,9 @@ void test_skyline(Config &config) {
 		
 		console->info("starting info loop");
 		skyline.sendCalibrate();
-		skyline.sendAttitude();
-		skyline.sendIMU();
-		skyline.sendAnalog();
+		// skyline.sendAttitude();
+		// skyline.sendIMU();
+		// skyline.sendAnalog();
 		while (!shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			skyline.update();
