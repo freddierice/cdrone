@@ -66,21 +66,7 @@ std::shared_ptr<IO> Server::accept() {
 	return std::make_shared<IO>(client_fd);
 }
 
-// TODO: make non-blocking
 /*
-void Server::readAll(void *buf, int size) {
-	int num_read = 0;
-	while(num_read < size) {
-		int partial_read;
-		if ((partial_read = SSL_read(m_ssl, (void *)((char *)buf+num_read),
-						size-num_read)) < 0) {
-			throw ServerException("could not read from server");
-		}
-		num_read += partial_read;
-	}
-}
-*/
-
 SSL_CTX* Server::ssl_create_context(const char *cert, const char *privkey) {
 	
 	const SSL_METHOD *method;
@@ -112,6 +98,7 @@ SSL_CTX* Server::ssl_create_context(const char *cert, const char *privkey) {
 
 	return ctx;
 }
+*/
 
 int Server::create_socket(uint16_t port) {
     int fd, flags; 

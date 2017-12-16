@@ -56,11 +56,9 @@ void FlightController::positionControl() {
 }
 
 void FlightController::calibrate() {
-	// TODO: set mode to calibrate
 	if (m_mode != Disarmed) {
 		console->warn("could not calibrate, in mode {}", m_mode);
 	}
-	// m_mode = Calibrating;
 	m_skyline.sendCalibrate();
 	setMode(Calibrating);
 }

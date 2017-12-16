@@ -10,7 +10,6 @@ all: $(PROTOS) $(TARGET)
 #MODULES=controller hardware json programs wire
 OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */*.cc)) main.o proto/io.pb.o
 
-# TODO: do expansion for cpp and cc files that actually have .h files.
 %.cpp: %.h
 %.cc: %.h
 
