@@ -172,7 +172,6 @@ func doInput() error {
 	}()
 
 	for !done {
-		// TODO: refresh screen with values
 		refresh(b)
 		time.Sleep(75 * time.Millisecond)
 	}
