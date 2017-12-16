@@ -7,6 +7,9 @@ Drone logic in C/C++. This project is composed of two sub projects: cdrone and g
  * mmal
  * jsoncpp (in tree)
 
+## Build
+ Docker image with dependancies will be made in the next month.
+
 ## References
  * `cdrone/json/` contains files from the jsoncpp project.
  * `cdrone/hardware` contains objects that hook up to hardware on the drone.
