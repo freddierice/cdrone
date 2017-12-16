@@ -31,3 +31,4 @@ Drone logic in C/C++. This project is composed of two sub projects: cdrone and g
  * better algorithms for control.
  * tear apart mmal because it is a resource heavy library. It creates new
    threads for components that probably don't need threads.
+ * add TLS support.
