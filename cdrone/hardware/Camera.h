@@ -8,11 +8,10 @@
 #include "misc/exception.h"
 #include "misc/Observations.h"
 
-#include </opt/vc/include/interface/mmal/mmal.h>
-// #include </opt/vc/include/interface/mmal/mmal_parameters_camera.h>
-#include </opt/vc/include/interface/mmal/mmal_component.h>
-#include </opt/vc/include/interface/mmal/util/mmal_default_components.h>
-#include </opt/vc/include/interface/mmal/util/mmal_connection.h>
+#include <interface/mmal/mmal.h>
+#include <interface/mmal/mmal_component.h>
+#include <interface/mmal/util/mmal_default_components.h>
+#include <interface/mmal/util/mmal_connection.h>
 
 #include <opencv2/opencv.hpp>
 

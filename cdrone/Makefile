@@ -1,8 +1,10 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
 CXX_FLAGS:=-Wall -std=c++14 -O2 #-g -Og -O2
-LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lopencv_core -lopencv_video -lopencv_imgcodecs # -latomic 
+LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lopencv_core -lopencv_video -lopencv_imgcodecs -Wl,-rpath=/opt/vc/lib -L/opt/vc/lib -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util
 TARGET:=cdrone
+
+.PHONY: docker
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))
 all: proto $(PROTOS) $(TARGET)
@@ -13,8 +15,11 @@ OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */
 %.cpp: %.h
 %.cc: %.h
 
+proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
+	protoc -I=../proto --cpp_out=proto $<
+
 %.o: %.cpp
-	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
+	$(CXX) $(CXX_FLAGS) -I. -I/opt/vc/include -c $^ -o $@
 
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
@@ -22,8 +27,8 @@ OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */
 proto:
 	@mkdir proto
 
-proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
-	protoc -I=../proto --cpp_out=proto $<
+docker:
+	@docker run -it --rm -v $(shell pwd):/home/user/cdrone -v $(shell pwd)/../proto:/home/user/proto freddierice/cdrone
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)

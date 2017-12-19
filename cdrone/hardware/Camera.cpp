@@ -1,9 +1,8 @@
 #include <vector>
 
-// TODO: change to relative paths
-#include </opt/vc/include/bcm_host.h>
-#include </opt/vc/include/interface/mmal/util/mmal_util.h>
-#include </opt/vc/include/interface/mmal/util/mmal_util_params.h>
+#include <bcm_host.h>
+#include <interface/mmal/util/mmal_util.h>
+#include <interface/mmal/util/mmal_util_params.h>
 
 #include "hardware/Camera.h"
 #include "misc/logging.h"

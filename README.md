@@ -2,13 +2,26 @@
 Drone logic in C/C++. This project is composed of two sub projects: cdrone and gobase. cdrone is written in C/C++ to be efficient. gobase is written in go, and does not need to be as efficient as its cdrone counterpart as it runs on a capable PC. This project has been tested on a minimal Arch linux for raspberry PI.
 
 ## Depends
- * spdlog for logging
- * protobuf
- * mmal
- * jsoncpp (in tree)
+Setup a go path and run
+```
+go get github.com/nsf/termbox-go
+```
 
 ## Build
- Docker image with dependancies will be made in the next month.
+If you have all the dependencies, run 
+```
+make
+```
+. Otherwise, run
+```
+make docker
+```
+, which will start a docker instance to make the project.
+
+# gobase
+```
+make
+```
 
 ## References
  * `cdrone/json/` contains files from the jsoncpp project.
