@@ -8,20 +8,8 @@ go get github.com/nsf/termbox-go
 ```
 
 ## Build
-If you have all the dependencies, run 
-```
-make
-```
-. Otherwise, run
-```
-make docker
-```
-, which will start a docker instance to make the project.
-
-# gobase
-```
-make
-```
+The recommended build is through a docker container that already has the
+dependencies. Just run `make` from the top directory.
 
 ## References
  * `cdrone/json/` contains files from the jsoncpp project.
