@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --label freddierice/cdrone .
+docker build -t freddierice/cdrone .
