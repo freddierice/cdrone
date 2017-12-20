@@ -4,7 +4,9 @@ Drone logic in C/C++. This project is composed of two sub projects: cdrone and g
 ## Build
 The recommended build is through a docker container that already has the
 dependencies. Just run 
-```make```
+```
+make
+```
 from the top directory.
 
 ## References
