@@ -122,19 +122,19 @@ RUN cd /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/
 	&& rm -rf spdlog_git
 
 # install golang
-ENV PATH="${PATH}:/home/user/go/bin"
+ENV PATH="${PATH}:/home/user/go/bin:/home/user/gopath/bin"
 ENV GOPATH="/home/user/gopath"
 RUN cd /home/user \
 	&& wget https://redirector.gvt1.com/edgedl/go/go1.9.2.linux-amd64.tar.gz \
 	&& tar xvf go1.9.2.linux-amd64.tar.gz \
 	&& rm -rf go1.9.2.linux-amd64.tar.gz \
-	&& mkdir -p gopath \
-	&& mkdir -p gopath/{src,bin,pkg}
+	&& mkdir -p gopath
 
 # go gets
 RUN cd /home/user \
 	&& go get -u github.com/nsf/termbox-go \
-	&& go get -u github.com/golang/protobuf/proto
+	&& go get -u github.com/golang/protobuf/proto \
+	&& go get -u github.com/golang/protobuf/protoc-gen-go
 
 WORKDIR /home/user/cdrone
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
