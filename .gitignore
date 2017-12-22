@@ -48,7 +48,6 @@ cdrone/proto/*.pb.cc
 cdrone/proto/*.pb.h
 gobase/proto/*.pb.go
 
-# do not add python pycache
-cbase/__pycache__/
-
-
+# do not add libs
+cdrone/libs
+cdrone/libs/*

@@ -9,6 +9,15 @@ make
 ```
 from the top directory.
 
+## Get Dependencies
+Most likely the libraries on the drone will not exist or they will be on the
+wrong version. To copy the needed library files from the docker container, run 
+```
+make pkg
+```
+and copy the files from `cdrone/pkg` to the drone. A good place to copy the
+files is `/usr/lib`.
+
 ## References
  * `cdrone/json/` contains files from the jsoncpp project.
  * `cdrone/hardware` contains objects that hook up to hardware on the drone.

@@ -4,7 +4,7 @@ CXX_FLAGS:=-Wall -std=c++14 -O2 #-g -Og -O2
 LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lopencv_core -lopencv_video -lopencv_imgcodecs -Wl,-rpath=/opt/vc/lib -L/opt/vc/lib -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util
 TARGET:=cdrone
 
-.PHONY: docker
+.PHONY: docker pkg
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))
 all: proto $(PROTOS) $(TARGET)
@@ -35,3 +35,6 @@ $(TARGET): $(OBJS)
 
 clean:
 	@rm -f $(TARGET) *.o */*.o proto/*.pb.*
+
+pkg:
+	./pkg

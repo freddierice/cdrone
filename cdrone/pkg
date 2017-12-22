@@ -1,0 +1,12 @@
+#!/bin/bash
+rm -rf libs
+docker run -it --rm -v $(pwd):/home/user/cdrone -v $(pwd)/../proto:/home/user/proto freddierice/cdrone armv8-rpi3-linux-gnueabihf-ldd --root /opt/vc cdrone &> libs
+cat libs | grep badf00d | cut -f2 -d\> | cut -f2 -d' ' > libs.sysroot
+# cat libs | grep badf00d | cut -f2 -d\> | cut -f2 -d' ' > libs.deadbeef
+rm libs
+mkdir libs
+PATHS="$(for p in $(cat libs.sysroot); do
+	echo /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot$p
+done | xargs)"
+docker run -it --rm -v $(pwd):/home/user/cdrone -v $(pwd)/../proto:/home/user/proto freddierice/cdrone cp $PATHS /home/user/cdrone/libs
+rm -rf libs.sysroot
