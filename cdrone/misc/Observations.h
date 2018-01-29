@@ -68,7 +68,7 @@ public:
 		ioVelocityY = 0;
 		ioPositionX = 0;
 		ioPositionY = 0;
-		// ioPositionZ = 0.35;
+		ioPositionZ = 0.35;
 	};
 };
 

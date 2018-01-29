@@ -68,8 +68,8 @@ void Serial::writeFull(const void *buf, int n) {
 		total += write((const void *)((char *)buf+total), n-total);
 	} while (total != n);
 
-	// flush written to m_fd to the wire.
-	tcflush(m_fd, TCOFLUSH);
+	// XXX: changes dynamics.. 
+	::tcdrain(m_fd);
 }
 
 int Serial::serialOpen(const std::string& filename) {

@@ -97,8 +97,6 @@ again2:
 	if (!message.ParseFromArray(m_recvBuffer, m_recvLen))
 		disconnect("could not read in ParseFromArray");
 
-	console->info("read");
-
 	m_recvBufferIter = m_recvBuffer;
 	m_recvLen = 0;
 
