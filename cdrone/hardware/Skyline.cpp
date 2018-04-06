@@ -10,18 +10,20 @@ Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
 Skyline::~Skyline() {}
 
 void Skyline::sendArm() {
-	sendRC(1500, 1500, 2000, 1000);
+	m_armed = true;
+	sendRC(1500, 1500, 1500, 1000);
 }
 
 void Skyline::sendDisarm() {
 	// spec actually says to use 1000 as the throttle, but the skyline will
 	// accept a lower throttle. It should be used for safety. Or not. 990 until
 	// changed to something better.
-	sendRC(1500, 1500, 1000, 990);
+	m_armed = false;
+	sendRC(1500, 1500, 1500, 1000);
 }
 
 void Skyline::sendIdle() {
-	sendRC(1500, 1500, 1500, 1000);
+	sendRC(1500, 1500, 1500, 1100);
 }
 
 void Skyline::sendRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
@@ -34,8 +36,8 @@ void Skyline::sendRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 	*cmdInt++ = pitch;
 	*cmdInt++ = yaw;
 	*cmdInt++ = throttle;
-	*cmdInt++ = 1500;
-	*cmdInt++ = 1500;
+	*cmdInt++ = m_armed ? 2000 : 1000; // aux 1
+	*cmdInt++ = 1500; // aux 2
 	*cmdInt++ = 1500;
 	*cmdInt   = 1500;
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -85,11 +87,10 @@ void Skyline::update() {
 	double now, dt;
 
 	// try to get the readings every few updates.
+	sendAttitude();
 	m_ticks++;
-	if (m_ticks > 2) {
+	if (m_ticks > 100) { 
 		m_ticks = 0;
-		sendAttitude();
-		sendIMU();
 		sendAnalog();
 	}
 
@@ -98,7 +99,7 @@ void Skyline::update() {
 		// get messages ready from multiwii.
 		if (!m_multiwii.recv(resp))
 			return;
-
+		
 		// process it.
 		switch (resp.m_type) {
 			case MSP_ACC_CALIBRATION:
@@ -117,15 +118,18 @@ void Skyline::update() {
 				lastYaw = m_obs->skylineAngYaw;
 
 				// update the now vars
-				m_obs->skylineAngRoll = (double)attitude->angx/180.0 * M_PI;
-				m_obs->skylineAngPitch = (double)attitude->angy/180.0 * M_PI;
-				m_obs->skylineAngYaw = (double)attitude->heading/180.0 * M_PI;
-				m_obs->skylineDAngRoll = m_obs->skylineAngRoll - lastRoll;
-				m_obs->skylineDAngPitch = m_obs->skylineAngPitch - lastPitch;
-				m_obs->skylineDAngYaw = m_obs->skylineAngYaw - lastYaw;
-				m_obs->skylineAngRollVel = (m_obs->skylineAngRoll - lastRoll)/dt;
-				m_obs->skylineAngPitchVel = (m_obs->skylineAngPitch - lastPitch)/dt;
-				m_obs->skylineAngYawVel = (m_obs->skylineAngYaw - lastYaw)/dt;
+				m_obs->skylineAngRoll = (((double)attitude->angx) + 1800.0) / 1800.0 * M_PI;
+				m_obs->skylineAngPitch = (((double)attitude->angy) + 900.0) / 900.0 * M_PI; ;
+				m_obs->skylineAngYaw = ((double)attitude->heading) / 180.0 * M_PI;
+
+				// get new angle diffs
+				m_obs->skylineDAngRoll = atan2(sin(m_obs->skylineAngRoll - lastRoll), cos(m_obs->skylineAngRoll - lastRoll));
+				m_obs->skylineDAngPitch = atan2(sin(m_obs->skylineAngPitch - lastPitch), cos(m_obs->skylineAngPitch - lastPitch));
+				m_obs->skylineDAngYaw = atan2(sin(m_obs->skylineAngYaw - lastYaw), cos(m_obs->skylineAngYaw - lastYaw));
+
+				m_obs->skylineAngRollVel = m_obs->skylineDAngRoll/dt;
+				m_obs->skylineAngPitchVel = m_obs->skylineDAngPitch/dt;
+				m_obs->skylineAngYawVel = m_obs->skylineDAngYaw/dt;
 
 				m_attitudeFlag = false;
 				break;

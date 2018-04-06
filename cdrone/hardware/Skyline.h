@@ -72,6 +72,7 @@ private:
 	std::atomic<bool> m_attitudeFlag;
 	std::atomic<bool> m_imuFlag;
 	std::atomic<bool> m_analogFlag;
+	std::atomic<bool> m_armed;
 
 	// time
 	double m_lastAttitudeTime;

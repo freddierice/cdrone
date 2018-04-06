@@ -12,8 +12,8 @@ FlightController::FlightController(Config &config,
 			config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 		   config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
-			config.throttlePIDD(), 1395, 1100, 1900), 
-	m_posXPID(-0.02, -0.001, 0, 0, -0.15, 0.15), m_posYPID(-0.02, -0.001, 0, 0, -0.15, 0.15) {
+			config.throttlePIDD(), 1600, 1100, 1900), 
+	m_posXPID(-0.04, -0.001, 0, 0, -0.20, 0.20), m_posYPID(-0.04, -0.001, 0, 0, -0.20, 0.20) {
 }
 
 FlightMode FlightController::getMode() {
@@ -80,14 +80,14 @@ void FlightController::update() {
 			// check if enough time has passed
 			then = m_lastModeChange;
 			now = std::chrono::high_resolution_clock::now();
-			if (now - then > std::chrono::seconds(1))
+			if (now - then > std::chrono::seconds(3))
 				setMode(FlightMode::Disarmed);
 			break;
 		case FlightMode::Arming:
 			m_skyline.sendArm();
 			then = m_lastModeChange;
 			now = std::chrono::high_resolution_clock::now();
-			if (now - then > std::chrono::seconds(1)) {
+			if (now - then > std::chrono::seconds(2)) {
 				setMode(FlightMode::Armed);
 				m_rollPID.reset();
 				m_pitchPID.reset();

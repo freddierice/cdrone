@@ -86,8 +86,8 @@ typedef struct MSP_RC_struct {
 
 // MSP_ATTITUDE
 typedef struct MSP_ATTITUDE_struct {
-	uint16_t angx; // [-1800, 1800]
-	uint16_t angy; // [-900, 900]
+	int16_t angx; // [-1800, 1800]
+	int16_t angy; // [-900, 900]
 	uint16_t heading; // [-180, 180]
 } MSP_ATTITUDE_T;
 

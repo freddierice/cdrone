@@ -231,7 +231,7 @@ void do_controller(Watchdog &watchdog, Config &config,
 		flightController.update();
 		
 		// cleanflight only runs serial at 100Hz
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(15));
 	}
 	watchdog.stop();
 }

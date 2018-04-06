@@ -315,10 +315,19 @@ void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 
 void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
+	static auto prev_time = std::chrono::high_resolution_clock::now();
+	static int ntimes = 0;
 	if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) {
 		// we have an inline vector, lets use it.
 		double x_motion = 0.0;
 		double y_motion = 0.0;
+		
+		ntimes++;
+		if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - prev_time).count() >= 10) { 
+			// console->info("Velocity HZ: {}", ntimes / 10.0);
+			ntimes = 0;
+			prev_time = std::chrono::high_resolution_clock::now();
+		}
 		
 		mmal_buffer_header_mem_lock(buffer);
 		auto last = (MotionData*)buffer->data + camera->m_blocks;
@@ -330,12 +339,22 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		mmal_buffer_header_mem_unlock(buffer);
 
 		// normalize the motion and use lazy motion blur
-		x_motion /= camera->m_blocks;
-		y_motion /= -camera->m_blocks;
-		x_motion *= 0.05;
-		y_motion *= 0.05;
-		x_motion -= tan(camera->m_obs->skylineDAngRoll) * camera->m_obs->infraredHeight * 0.0001;
-		y_motion -= tan(camera->m_obs->skylineDAngPitch) * camera->m_obs->infraredHeight * 0.0001;
+		// x_motion /= camera->m_blocks;
+		// y_motion /= -camera->m_blocks;
+		// x_motion *= 0.055;
+		// y_motion *= 0.05;
+		// x_motion -= tan(camera->m_obs->skylineDAngRoll) * camera->m_obs->infraredHeight * 0.0001;
+		// y_motion -= tan(camera->m_obs->skylineDAngPitch) * camera->m_obs->infraredHeight * 0.0001;
+		/*
+		console->info("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}", x_motion, y_motion, camera->m_obs->infraredHeight, 
+				camera->m_obs->skylineDAngRoll, camera->m_obs->skylineDAngPitch,
+				camera->m_obs->skylineDAngYaw,
+				camera->m_obs->skylineAngRoll, camera->m_obs->skylineAngPitch, 
+				camera->m_obs->skylineAngYaw, camera->m_obs->skylineAngRollVel, camera->m_obs->skylineAngPitchVel,
+				camera->m_obs->skylineAngYawVel);
+				*/
+				// tan(camera->m_obs->skylineDAngRoll) * camera->m_obs->infraredHeight, 
+				// tan(camera->m_obs->skylineDAngPitch) * camera->m_obs->infraredHeight);
 		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityX;
 		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityY;
 
@@ -366,6 +385,8 @@ void Camera::resetPosition() {
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
 	double x, y;
+	static auto prev_time = std::chrono::high_resolution_clock::now();
+	static int ntimes = 0;
 
 	// TODO: speed up by swapping frame buffers.
 
@@ -380,6 +401,13 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		mmal_buffer_header_mem_lock(buffer);
 		::memcpy(camera->m_currentFrameBuffer, buffer->data, buffer->length);
 		mmal_buffer_header_mem_unlock(buffer);
+
+		ntimes++;
+		if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - prev_time).count() >= 10) { 
+			// console->info("Camera HZ: {}", ntimes / 10.0);
+			ntimes = 0;
+			prev_time = std::chrono::high_resolution_clock::now();
+		}
 		
 		// if this is first frame, keep it.
 		if (!camera->m_hasFirstFrame) {
