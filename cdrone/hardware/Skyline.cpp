@@ -6,47 +6,55 @@
 #include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
-		config.skylinePort()), m_multiwii(m_serial), m_obs(obs), m_ticks(0) {}
+		config.skylinePort()), m_multiwii(m_serial), m_obs(obs),
+		m_calibrateFlag(false), m_attitudeFlag(false), m_imuFlag(false),
+		m_analogFlag(false), m_armed(false), m_lastAttitudeTime(0.0), m_ticks(0),
+		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000) {}
 Skyline::~Skyline() {}
 
-void Skyline::sendArm() {
+void Skyline::setArm() {
 	m_armed = true;
-	sendRC(1500, 1500, 1500, 1000);
+	setRC(1500, 1500, 1500, 900);
 }
 
-void Skyline::sendDisarm() {
+void Skyline::setDisarm() {
 	// spec actually says to use 1000 as the throttle, but the skyline will
 	// accept a lower throttle. It should be used for safety. Or not. 990 until
 	// changed to something better.
 	m_armed = false;
-	sendRC(1500, 1500, 1500, 1000);
+	setRC(1500, 1500, 1500, 900);
 }
 
-void Skyline::sendIdle() {
-	sendRC(1500, 1500, 1500, 1100);
+void Skyline::setIdle() {
+	setRC(1500, 1500, 1500, 900);
 }
 
-void Skyline::sendRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
+void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 		uint16_t throttle) {
-	char cmd[16];
+	m_roll = roll;
+	m_pitch = pitch;
+	m_yaw = yaw;
+	m_throttle = throttle;
+}
+
+void Skyline::sendRC() {
+	char cmd[10];
 	uint16_t *cmdInt = (uint16_t *)&cmd;
 	
 #if defined(__BYTE_ORDER__) &&__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	*cmdInt++ = roll;
-	*cmdInt++ = pitch;
-	*cmdInt++ = yaw;
-	*cmdInt++ = throttle;
-	*cmdInt++ = m_armed ? 2000 : 1000; // aux 1
-	*cmdInt++ = 1500; // aux 2
-	*cmdInt++ = 1500;
-	*cmdInt   = 1500;
+	cmdInt[0] = m_roll;
+	cmdInt[1] = m_pitch;
+	cmdInt[2] = m_yaw;
+	cmdInt[3] = m_throttle;
+	cmdInt[4] = m_armed ? 1800 : 1000; // aux 1
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	#error "Not Yet Implemented"
 #else
 	#error "Compiler is not compatible -- use GCC"
 #endif
 	
-	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, cmd, 16);
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, cmd, 10);
+	console->info("sent: {} {} {} {} {}", cmdInt[0], cmdInt[1], cmdInt[2], cmdInt[3], cmdInt[4]);
 }
 
 void Skyline::sendCalibrate() {

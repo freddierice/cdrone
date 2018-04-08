@@ -8,6 +8,8 @@
 #include "misc/logging.h"
 #include "misc/utility.h"
 
+#include <pthread.h>
+
 #include <opencv2/opencv.hpp>
 
 // definitions for things that should exist in the MMAL library.
@@ -26,6 +28,15 @@ Camera::Camera(Config &config, std::shared_ptr<Observations> obs) :
 Camera::Camera(int port, std::shared_ptr<Observations> obs) :
    	m_port(port), m_width(320), m_height(240), m_framerate(90), m_obs(obs),
 	m_running(false), m_positionEnabled(false), m_hasFirstFrame(false) {
+	
+	// due to inefficiencies in the MMAL framework, we need to pin the
+	// camera and its threads to a single core. MMAL starts a bunch of
+	// threads that will inherit this affinity.
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(0, &cpuset);
+	pthread_setaffinity_np(pthread_self(),
+			sizeof(cpu_set_t), &cpuset);
 
 	MMAL_PARAMETER_INT32_T cameraNum;
 	MMAL_PORT_T *preview_port, *video_port, *still_port;
@@ -303,6 +314,14 @@ Camera::Camera(int port, std::shared_ptr<Observations> obs) :
 	console->info("camera width: {}", m_width);	
 	console->info("camera height: {}", m_height);	
 	console->info("camera framerate: {}", m_framerate);	
+
+	CPU_ZERO(&cpuset);
+	CPU_SET(0, &cpuset);
+	CPU_SET(1, &cpuset);
+	CPU_SET(2, &cpuset);
+	CPU_SET(3, &cpuset);
+	pthread_setaffinity_np(pthread_self(),
+			sizeof(cpu_set_t), &cpuset);
 }
 
 void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
@@ -338,6 +357,10 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		}
 		mmal_buffer_header_mem_unlock(buffer);
 
+		x_motion /= camera->m_blocks;
+		y_motion /= -camera->m_blocks;
+		x_motion *= 0.055;
+		y_motion *= 0.05;
 		// normalize the motion and use lazy motion blur
 		// x_motion /= camera->m_blocks;
 		// y_motion /= -camera->m_blocks;

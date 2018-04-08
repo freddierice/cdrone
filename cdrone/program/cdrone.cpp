@@ -19,14 +19,15 @@
 #include "wire/Serial.h"
 
 
-void do_update(Watchdog &watchdog, Infrared &infrared) {
+void do_update(Watchdog &watchdog, Infrared &infrared,
+		FlightController &flightController) {
 	
 	console->info("update loop started");
 	watchdog.start();
 	while (!shutdown) {
 		watchdog.ok();
 		infrared.update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		flightController.sendRC();
 	}
 	watchdog.stop();
 }
@@ -229,9 +230,7 @@ void do_controller(Watchdog &watchdog, Config &config,
 	while (!shutdown) {
 		watchdog.ok();
 		flightController.update();
-		
-		// cleanflight only runs serial at 100Hz
-		std::this_thread::sleep_for(std::chrono::milliseconds(15));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	watchdog.stop();
 }
@@ -243,6 +242,12 @@ void cdrone(Config &config) {
 	Watchdog updateWatchdog(config.updateWatchdog(), "update");
 	Watchdog ioWatchdog(config.ioWatchdog(), "io");
 	Watchdog controllerWatchdog(config.controllerWatchdog(), "controller");
+
+	// check for correct hardware
+	if (std::thread::hardware_concurrency() != 4) {
+		console->error("cpu not supported -- must have 4 hardware cores.");
+		return;
+	}
 
 	// initialize the observations
 	std::shared_ptr<Observations> obs = std::make_shared<Observations>();
@@ -268,13 +273,27 @@ void cdrone(Config &config) {
 	console->info("creating threads");
 	pthread_block(SIGINT);
 	std::thread update_thr(do_update, std::ref(updateWatchdog), 
-			std::ref(infrared));
+			std::ref(infrared), std::ref(flightController));
 	std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
 			std::ref(config), std::ref(flightController));
 	std::thread serve_thr(do_serve, std::ref(ioWatchdog), std::ref(config),
 			std::ref(ioController), std::ref(flightController), obs,
 			std::ref(camera));
 	pthread_unblock(SIGINT);
+
+	// move threads to specific cores
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(1, &cpuset);
+	pthread_setaffinity_np(update_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
+
+	CPU_ZERO(&cpuset);
+	CPU_SET(2, &cpuset);
+	pthread_setaffinity_np(controller_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
+
+	CPU_ZERO(&cpuset);
+	CPU_SET(3, &cpuset);
+	pthread_setaffinity_np(serve_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
 	
 	// join with threads
 	update_thr.join(); 

@@ -16,18 +16,21 @@ public:
 	Skyline(Config &config, std::shared_ptr<Observations> obs);
 	~Skyline();
 
-	// sendArm sends a single arm command to the skyline.
-	void sendArm();
+	// setArm sends a single arm command to the skyline.
+	void setArm();
 	
 	// sendDisarm sends a single disarm command to the skyline.
-	void sendDisarm();
+	void setDisarm();
 
-	// sendIdle sends an idle command to the skyline.
-	void sendIdle();
+	// setIdle sends an idle command to the skyline.
+	void setIdle();
 
 	// sendRC sends roll, pitch, yaw, and throttle to the skyline. The values
 	// must lie between 1000 and 2000.
-	void sendRC(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t throttle);
+	void sendRC();
+
+	// setRC sets the rc values to get sent to the skyline.
+	void setRC(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t throttle);
 
 	// sendCalibrate sends a single calibrate command to the skyline.
 	void sendCalibrate();
@@ -79,6 +82,12 @@ private:
 
 	// ticks
 	int m_ticks;
+	
+	// rc channels
+	std::atomic<uint16_t> m_roll;
+	std::atomic<uint16_t> m_pitch;
+	std::atomic<uint16_t> m_yaw;
+	std::atomic<uint16_t> m_throttle;
 };
 
 #endif /* __SKYLINE_H__ */

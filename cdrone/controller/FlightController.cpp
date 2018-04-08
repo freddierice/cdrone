@@ -7,12 +7,13 @@
 FlightController::FlightController(Config &config,
 		std::shared_ptr<Observations> obs) : m_obs(obs), m_mode(Disarmed),
 	m_lastModeChange(std::chrono::high_resolution_clock::now()),
+	m_lastSendRC(std::chrono::high_resolution_clock::now()),
 	m_skyline(config, obs), m_posX(0.0), m_posY(0.0),
 	m_rollPID(config.rollPIDP(), config.rollPIDI(),
 			config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 		   config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
-			config.throttlePIDD(), 1600, 1100, 1900), 
+			config.throttlePIDD(), 1300, 1100, 1900), 
 	m_posXPID(-0.04, -0.001, 0, 0, -0.20, 0.20), m_posYPID(-0.04, -0.001, 0, 0, -0.20, 0.20) {
 }
 
@@ -21,14 +22,19 @@ FlightMode FlightController::getMode() {
 }
 
 void FlightController::arm() {
-	if (getMode() == Disarmed)
-		setMode(Arming);
+	if (getMode() == Disarmed) {
+		m_skyline.setArm();
+		setMode(Armed);
+		m_skyline.setIdle();
+	}
 }
 
 void FlightController::disarm() {
 	auto mode = getMode();
-	if (mode != Disarmed && mode != Disarming)
-		setMode(Disarming);
+	m_skyline.setDisarm();
+	if (mode != Disarmed && mode != Disarming) {
+		setMode(Disarmed);
+	}
 }
 
 void FlightController::takeoff() {
@@ -45,8 +51,12 @@ void FlightController::rawControl() {
 
 void FlightController::velocityControl() {
 	auto mode = getMode();
-	if (mode == RawControl || mode == PositionControl)
+	if (mode == RawControl || mode == PositionControl) {
+		m_rollPID.reset();
+		m_pitchPID.reset();
+		m_throttlePID.reset();
 		setMode(VelocityControl);
+	}
 }
 
 void FlightController::positionControl() {
@@ -63,6 +73,15 @@ void FlightController::calibrate() {
 	setMode(Calibrating);
 }
 
+void FlightController::sendRC() {
+	auto now = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point then = m_lastSendRC;
+	if (now - then > std::chrono::milliseconds(5)) {
+		m_lastSendRC = now;
+		m_skyline.sendRC();
+	}
+}
+
 void FlightController::update() {
 	uint16_t roll, pitch, throttle;
 	double vx, vy;
@@ -76,23 +95,10 @@ void FlightController::update() {
 			break;
 		case FlightMode::Disarming:
 			// send a disarm signal to the multiwii board.
-			m_skyline.sendDisarm();
+			m_skyline.setDisarm();
 			// check if enough time has passed
 			then = m_lastModeChange;
-			now = std::chrono::high_resolution_clock::now();
-			if (now - then > std::chrono::seconds(3))
-				setMode(FlightMode::Disarmed);
-			break;
-		case FlightMode::Arming:
-			m_skyline.sendArm();
-			then = m_lastModeChange;
-			now = std::chrono::high_resolution_clock::now();
-			if (now - then > std::chrono::seconds(2)) {
-				setMode(FlightMode::Armed);
-				m_rollPID.reset();
-				m_pitchPID.reset();
-				m_throttlePID.reset();
-			}
+			setMode(FlightMode::Disarmed);
 			break;
 		case FlightMode::Calibrating:
 			now = std::chrono::high_resolution_clock::now();
@@ -110,14 +116,14 @@ void FlightController::update() {
 			setMode(VelocityControl);
 			break;
 		case FlightMode::RawControl:
-			m_skyline.sendRC(m_obs->ioRawRoll, m_obs->ioRawPitch,
+			m_skyline.setRC(m_obs->ioRawRoll, m_obs->ioRawPitch,
 					m_obs->ioRawYaw, m_obs->ioRawThrottle);
 			break;
 		case FlightMode::VelocityControl:
 			roll = (uint16_t)m_rollPID.step(m_obs->cameraVelocityX - m_obs->ioVelocityX);
 			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraVelocityY - m_obs->ioVelocityY);
 			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - m_obs->ioPositionZ);
-			m_skyline.sendRC(roll, pitch, 1500, throttle);
+			m_skyline.setRC(roll, pitch, 1500, throttle);
 			break;
 		case FlightMode::PositionControl:
 			// use pos pid to get velocity targets.
@@ -128,10 +134,9 @@ void FlightController::update() {
 			roll = (uint16_t)m_rollPID.step(m_obs->cameraVelocityX - vx);
 			pitch = (uint16_t)m_pitchPID.step(m_obs->cameraVelocityY - vy);
 			throttle = (uint16_t)m_throttlePID.step(m_obs->infraredHeight - m_obs->ioPositionZ);
-			m_skyline.sendRC(roll, pitch, 1500, throttle);
+			m_skyline.setRC(roll, pitch, 1500, throttle);
 			break;
 		case FlightMode::Armed:
-			m_skyline.sendIdle();
 			break;
 		case FlightMode::TouchDown:
 			break;
@@ -141,7 +146,7 @@ void FlightController::update() {
 			//SPDLOG_DEBUG(spdlog::get("console"), "unhandled mode: {}", mode);
 			throw std::runtime_error("got into a bad mode");
 	}
-	
+
 	m_skyline.update();
 }
 

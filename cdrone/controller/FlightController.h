@@ -54,6 +54,7 @@ public:
 	// FUNCTION TO BE RUN BY THE UPDATER THREAD //
 	// update will send the signals to the underlying flight controller.
 	void update();
+	void sendRC();
 	
 	// FUNCTIONS THAT CAN BE RUN BY ANY THREAD //
 	FlightMode getMode();
@@ -70,6 +71,7 @@ private:
 	// know when it is time to send the right signals and transition into new
 	// states.
 	std::atomic<std::chrono::high_resolution_clock::time_point> m_lastModeChange;
+	std::atomic<std::chrono::high_resolution_clock::time_point> m_lastSendRC;
 	Skyline m_skyline;
 	
 	FlightController();
