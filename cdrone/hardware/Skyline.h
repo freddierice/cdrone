@@ -16,6 +16,10 @@ public:
 	Skyline(Config &config, std::shared_ptr<Observations> obs);
 	~Skyline();
 
+	// start sends a single sequence of msp commands to the flight controller
+	// to start the call and response from the controller.
+	void start();
+
 	// setArm sends a single arm command to the skyline.
 	void setArm();
 	
@@ -25,10 +29,6 @@ public:
 	// setIdle sends an idle command to the skyline.
 	void setIdle();
 
-	// sendRC sends roll, pitch, yaw, and throttle to the skyline. The values
-	// must lie between 1000 and 2000.
-	void sendRC();
-
 	// setRC sets the rc values to get sent to the skyline.
 	void setRC(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t throttle);
 
@@ -36,22 +36,9 @@ public:
 	void sendCalibrate();
 	bool calibrateDone();
 
-	// sendAttitude sends a single attitude request to the skyline.
-	void sendAttitude();
-	bool attitudeDone();
-
-	// sendIMU sends a single IMU request to the skyline.
-	void sendIMU();
-	bool imuDone();
-
-	// sendAnalog sends a single analog request to the skyline.
-	void sendAnalog();
-	bool analogDone();
-
-
-	// update reads responses from the wire and sets flags.
+	// update recvs and reinitiates sends on the MSP controller.
 	void update();
-	
+
 	static const unsigned char CMD_ARM[];
 	static const unsigned char CMD_DISARM[];
 	static const double ACC_RAW_TO_MSS;
@@ -62,6 +49,20 @@ private:
 	// default constructor not allowed.
 	Skyline() = delete;
 
+	// sendRC sends roll, pitch, yaw, and throttle to the skyline. The values
+	// must lie between 1000 and 2000.
+	void sendRC();
+
+	// sendAttitude sends a single attitude request to the skyline.
+	void sendAttitude();
+
+	// sendIMU sends a single IMU request to the skyline.
+	void sendIMU();
+
+	// sendAnalog sends a single analog request to the skyline.
+	void sendAnalog();
+
+	// update reads responses from the wire and sets flags.
 	// a multiwii protocol parser for understanding messages that go from the
 	// skyline to me.
 	Serial m_serial;

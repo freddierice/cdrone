@@ -73,16 +73,11 @@ void FlightController::calibrate() {
 	setMode(Calibrating);
 }
 
-void FlightController::sendRC() {
-	auto now = std::chrono::high_resolution_clock::now();
-	std::chrono::high_resolution_clock::time_point then = m_lastSendRC;
-	if (now - then > std::chrono::milliseconds(5)) {
-		m_lastSendRC = now;
-		m_skyline.sendRC();
-	}
+void FlightController::updateRC() {
+	m_skyline.update();
 }
 
-void FlightController::update() {
+void FlightController::updateController() {
 	uint16_t roll, pitch, throttle;
 	double vx, vy;
 	std::chrono::high_resolution_clock::time_point then, now;
@@ -146,8 +141,6 @@ void FlightController::update() {
 			//SPDLOG_DEBUG(spdlog::get("console"), "unhandled mode: {}", mode);
 			throw std::runtime_error("got into a bad mode");
 	}
-
-	m_skyline.update();
 }
 
 void FlightController::setMode(FlightMode mode) {

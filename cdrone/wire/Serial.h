@@ -25,6 +25,9 @@ public:
 	// writeFull writes a full n characters. If n characters are not written,
 	// the function will throw a SerialException.
 	void writeFull(const void* buffer, int n);
+
+	// flush will write all characters in buffer to the wire
+	void flush();
 private:
 
 	// serialOpen opens a file descriptor to the serial port at filename.

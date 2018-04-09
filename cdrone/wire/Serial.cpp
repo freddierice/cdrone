@@ -67,8 +67,9 @@ void Serial::writeFull(const void *buf, int n) {
 	do {
 		total += write((const void *)((char *)buf+total), n-total);
 	} while (total != n);
+}
 
-	// XXX: changes dynamics.. 
+void Serial::flush() {
 	::tcdrain(m_fd);
 }
 

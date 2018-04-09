@@ -53,8 +53,8 @@ public:
 
 	// FUNCTION TO BE RUN BY THE UPDATER THREAD //
 	// update will send the signals to the underlying flight controller.
-	void update();
-	void sendRC();
+	void updateController();
+	void updateRC();
 	
 	// FUNCTIONS THAT CAN BE RUN BY ANY THREAD //
 	FlightMode getMode();

@@ -11,4 +11,6 @@ extern std::shared_ptr<spdlog::logger> console;
 // initialize the logging for cdrone.
 void initialize_logging();
 
+
+
 #endif /* __LOGGING_H__ */

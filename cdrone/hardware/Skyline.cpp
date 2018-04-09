@@ -9,8 +9,18 @@ Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
 		config.skylinePort()), m_multiwii(m_serial), m_obs(obs),
 		m_calibrateFlag(false), m_attitudeFlag(false), m_imuFlag(false),
 		m_analogFlag(false), m_armed(false), m_lastAttitudeTime(0.0), m_ticks(0),
-		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000) {}
+		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000) {
+	setIdle();
+	start();
+}
 Skyline::~Skyline() {}
+
+void Skyline::start() {
+	sendRC();
+	sendAnalog();
+	sendIMU();
+	sendAttitude();
+}
 
 void Skyline::setArm() {
 	m_armed = true;
@@ -65,25 +75,16 @@ bool Skyline::calibrateDone() {
 	return !m_calibrateFlag;
 }
 void Skyline::sendAttitude() {
-	m_attitudeFlag = true;
+	// m_attitudeFlag = true;
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_ATTITUDE);
 }
-bool Skyline::attitudeDone() {
-	return !m_attitudeFlag;
-}
 void Skyline::sendIMU() {
-	m_imuFlag = true;
+	// m_imuFlag = true;
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_RAW_IMU);
 }
-bool Skyline::imuDone() {
-	return !m_imuFlag;
-}
 void Skyline::sendAnalog() {
-	m_analogFlag = true;
+	// m_analogFlag = true;
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_ANALOG);
-}
-bool Skyline::analogDone() {
-	return !m_analogFlag;
 }
 
 void Skyline::update() {
@@ -94,21 +95,12 @@ void Skyline::update() {
 	double lastRoll, lastPitch, lastYaw;
 	double now, dt;
 
-	// try to get the readings every few updates.
-	sendAttitude();
-	m_ticks++;
-	if (m_ticks > 100) { 
-		m_ticks = 0;
-		sendAnalog();
-	}
-
-	// field at most 20 reads at a time
-	for (int i = 0; i < 20; i++) {
+	// process it. (expect to process one of each)
+	for (int i = 0; i < 4; i++) {
 		// get messages ready from multiwii.
 		if (!m_multiwii.recv(resp))
 			return;
-		
-		// process it.
+	
 		switch (resp.m_type) {
 			case MSP_ACC_CALIBRATION:
 				m_calibrateFlag = false;
@@ -139,12 +131,14 @@ void Skyline::update() {
 				m_obs->skylineAngPitchVel = m_obs->skylineDAngPitch/dt;
 				m_obs->skylineAngYawVel = m_obs->skylineDAngYaw/dt;
 
-				m_attitudeFlag = false;
+				// m_attitudeFlag = false;
+				sendAttitude();
 				break;
 			case MSP_ANALOG:
 				analog = (MSP_ANALOG_T *)resp.m_data;
 				m_obs->skylineBattery = (double)analog->vbat/10.0;
-				m_analogFlag = false;
+				// m_analogFlag = false;
+				sendAnalog();
 				break;
 			case MSP_RAW_IMU:
 				// XXX: using TA values... figure out a better way.
@@ -155,10 +149,13 @@ void Skyline::update() {
 				m_obs->skylineGyroX = imu->gyrx;
 				m_obs->skylineGyroY = imu->gyry;
 				m_obs->skylineGyroZ = imu->gyrz;
-				m_imuFlag = false;
+				// m_imuFlag = false;
+				sendIMU();
+				break;
+			case MSP_SET_RAW_RC:
+				sendRC();
 				break;
 			// ignore these
-			case MSP_SET_RAW_RC:
 			case MSP_STATUS:
 			case MSP_BOXIDS:
 			case MSP_SET_BOX:
@@ -173,6 +170,7 @@ void Skyline::update() {
 				break;
 		}
 	}
+	// m_serial.flush();
 }
 
 // constants

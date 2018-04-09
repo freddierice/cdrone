@@ -35,6 +35,7 @@ Camera::Camera(int port, std::shared_ptr<Observations> obs) :
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(0, &cpuset);
+	CPU_SET(1, &cpuset);
 	pthread_setaffinity_np(pthread_self(),
 			sizeof(cpu_set_t), &cpuset);
 

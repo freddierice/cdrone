@@ -27,7 +27,8 @@ void do_update(Watchdog &watchdog, Infrared &infrared,
 	while (!shutdown) {
 		watchdog.ok();
 		infrared.update();
-		flightController.sendRC();
+		flightController.updateRC();
+		flightController.updateController();
 	}
 	watchdog.stop();
 }
@@ -220,21 +221,6 @@ void do_serve(Watchdog &watchdog, Config &config,
 	}
 }
 
-void do_controller(Watchdog &watchdog, Config &config, 
-		FlightController &flightController) {
-	
-	console->info("controller loop started");
-		
-	watchdog.start();
-	flightController.calibrate();
-	while (!shutdown) {
-		watchdog.ok();
-		flightController.update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	watchdog.stop();
-}
-
 void cdrone(Config &config) {
 
 	// initialize the watchdogs
@@ -274,8 +260,8 @@ void cdrone(Config &config) {
 	pthread_block(SIGINT);
 	std::thread update_thr(do_update, std::ref(updateWatchdog), 
 			std::ref(infrared), std::ref(flightController));
-	std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
-			std::ref(config), std::ref(flightController));
+	// std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
+	// 		std::ref(config), std::ref(flightController));
 	std::thread serve_thr(do_serve, std::ref(ioWatchdog), std::ref(config),
 			std::ref(ioController), std::ref(flightController), obs,
 			std::ref(camera));
@@ -284,12 +270,12 @@ void cdrone(Config &config) {
 	// move threads to specific cores
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
-	CPU_SET(1, &cpuset);
+	CPU_SET(2, &cpuset);
 	pthread_setaffinity_np(update_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
 
-	CPU_ZERO(&cpuset);
-	CPU_SET(2, &cpuset);
-	pthread_setaffinity_np(controller_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
+	// CPU_ZERO(&cpuset);
+	// CPU_SET(2, &cpuset);
+	// pthread_setaffinity_np(controller_thr.native_handle(), sizeof(cpu_set_t), &cpuset);
 
 	CPU_ZERO(&cpuset);
 	CPU_SET(3, &cpuset);
@@ -300,8 +286,8 @@ void cdrone(Config &config) {
 	console->info("update thread joined");
 	serve_thr.join();
 	console->info("io thread joined");
-	controller_thr.join();
-	console->info("controller thread joined");
+	// controller_thr.join();
+	// console->info("controller thread joined");
 	
 	// stop camera
 	camera.stop();
