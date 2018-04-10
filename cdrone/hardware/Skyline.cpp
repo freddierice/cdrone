@@ -47,24 +47,32 @@ void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 	m_throttle = throttle;
 }
 
+typedef struct RC_struct {
+	uint16_t roll;
+	uint16_t pitch;
+	uint16_t yaw;
+	uint16_t thrust;
+	uint16_t aux1;
+} __attribute__((packed)) RC_t;
+
+VariableLogger<RC_t> rc_logger("rc");
 void Skyline::sendRC() {
-	char cmd[10];
-	uint16_t *cmdInt = (uint16_t *)&cmd;
+	RC_t rc;
 	
 #if defined(__BYTE_ORDER__) &&__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	cmdInt[0] = m_roll;
-	cmdInt[1] = m_pitch;
-	cmdInt[2] = m_yaw;
-	cmdInt[3] = m_throttle;
-	cmdInt[4] = m_armed ? 1800 : 1000; // aux 1
+	rc.roll = m_roll;
+	rc.pitch = m_pitch;
+	rc.yaw = m_yaw;
+	rc.thrust = m_throttle;
+	rc.aux1 = m_armed ? 1800 : 1000; // aux 1
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	#error "Not Yet Implemented"
 #else
 	#error "Compiler is not compatible -- use GCC"
 #endif
 	
-	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, cmd, 10);
-	console->info("sent: {} {} {} {} {}", cmdInt[0], cmdInt[1], cmdInt[2], cmdInt[3], cmdInt[4]);
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 10);
+	rc_logger.log(rc);
 }
 
 void Skyline::sendCalibrate() {

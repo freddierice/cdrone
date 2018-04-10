@@ -3,7 +3,7 @@ MAINTAINER Freddie Rice
 
 # install the dependencies 
 RUN apt-get -y update \
-	&& apt-get -y install build-essential curl gawk bison flex automake texinfo libtool libtool-bin cvs libncurses5-dev python-dev gperf help2man git wget cmake unzip
+	&& apt-get -y install build-essential curl gawk bison flex automake texinfo libtool libtool-bin cvs libncurses5-dev python-dev gperf help2man git wget cmake unzip pkg-config
 
 # dumb-init
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64 \
@@ -135,6 +135,14 @@ RUN cd /home/user \
 	&& go get -u github.com/nsf/termbox-go \
 	&& go get -u github.com/golang/protobuf/proto \
 	&& go get -u github.com/golang/protobuf/protoc-gen-go
+
+RUN cd /home/user \
+	&& git clone https://github.com/libarchive/libarchive.git \
+	&& cd libarchive \
+	&& build/autogen.sh \
+	&& ./configure --host=armv8-rpi3-linux-gnueabihf CC=armv8-rpi3-linux-gnueabihf-gcc --prefix=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr --without-openssl \
+	&& make \
+	&& make install
 
 WORKDIR /home/user/cdrone
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]

@@ -333,6 +333,12 @@ void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	mmal_buffer_header_release(buffer);
 }
 
+typedef struct motion_struct {
+	double x_motion;
+	double y_motion;
+} __attribute__((packed)) motion_t;
+VariableLogger<motion_t> motion_logger("motion");
+VariableLogger<double> motion_hz_logger("motion_hz");
 void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
 	static auto prev_time = std::chrono::high_resolution_clock::now();
@@ -343,10 +349,11 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		double y_motion = 0.0;
 		
 		ntimes++;
-		if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - prev_time).count() >= 10) { 
-			// console->info("Velocity HZ: {}", ntimes / 10.0);
+		auto now = std::chrono::high_resolution_clock::now();
+		if (std::chrono::duration_cast<std::chrono::seconds>(now - prev_time).count() >= 10) { 
+			motion_hz_logger.log((double)ntimes / 10.0);
 			ntimes = 0;
-			prev_time = std::chrono::high_resolution_clock::now();
+			prev_time = now;
 		}
 		
 		mmal_buffer_header_mem_lock(buffer);
@@ -406,6 +413,7 @@ void Camera::resetPosition() {
 	m_obs->cameraPositionYaw = 0.0;
 }
 
+VariableLogger<double> position_hz_logger("position_hz");
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
 	double x, y;
@@ -427,10 +435,11 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		mmal_buffer_header_mem_unlock(buffer);
 
 		ntimes++;
-		if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - prev_time).count() >= 10) { 
-			// console->info("Camera HZ: {}", ntimes / 10.0);
+		auto now = std::chrono::high_resolution_clock::now();
+		if (std::chrono::duration_cast<std::chrono::seconds>(now- prev_time).count() >= 10) { 
+			position_hz_logger.log((double)ntimes / 10.0);
 			ntimes = 0;
-			prev_time = std::chrono::high_resolution_clock::now();
+			prev_time = now;
 		}
 		
 		// if this is first frame, keep it.

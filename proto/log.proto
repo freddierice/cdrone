@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package proto;
+
+// Map holds a map from variable name to a file with that holds
+// variables of size.
+message Map {
+	string name = 1;
+	uint32 id = 2;
+	uint32 size = 3;
+}
+
