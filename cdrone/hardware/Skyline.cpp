@@ -2,7 +2,8 @@
 #include <math.h>
 
 #include "hardware/Skyline.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
+#include "logging/rc.h"
 #include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
@@ -55,9 +56,9 @@ typedef struct RC_struct {
 	uint16_t aux1;
 } __attribute__((packed)) RC_t;
 
-VariableLogger<RC_t> rc_logger("rc");
+logging::VariableLogger rc_logger("rc", logging::rc_variable);
 void Skyline::sendRC() {
-	RC_t rc;
+	logging::rc_t rc;
 	
 #if defined(__BYTE_ORDER__) &&__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	rc.roll = m_roll;
@@ -72,7 +73,7 @@ void Skyline::sendRC() {
 #endif
 	
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 10);
-	rc_logger.log(rc);
+	rc_logger.log((void *)&rc);
 }
 
 void Skyline::sendCalibrate() {

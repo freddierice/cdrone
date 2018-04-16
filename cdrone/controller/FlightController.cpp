@@ -1,7 +1,7 @@
 #include <stdexcept>
 
 #include "controller/FlightController.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 
 
 FlightController::FlightController(Config &config,

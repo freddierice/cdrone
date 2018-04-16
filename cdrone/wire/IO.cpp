@@ -1,7 +1,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "misc/utility.h"
 #include "wire/IO.h"
 

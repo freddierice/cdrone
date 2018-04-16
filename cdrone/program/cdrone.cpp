@@ -13,7 +13,7 @@
 #include "hardware/Infrared.h"
 #include "main.h"
 #include "misc/Config.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "misc/utility.h"
 #include "wire/MultiWii.h"
 #include "wire/Serial.h"

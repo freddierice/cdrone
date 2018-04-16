@@ -5,7 +5,7 @@
 #include <interface/mmal/util/mmal_util_params.h>
 
 #include "hardware/Camera.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "misc/utility.h"
 
 #include <pthread.h>
@@ -333,12 +333,14 @@ void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	mmal_buffer_header_release(buffer);
 }
 
+/*
 typedef struct motion_struct {
 	double x_motion;
 	double y_motion;
 } __attribute__((packed)) motion_t;
 VariableLogger<motion_t> motion_logger("motion");
 VariableLogger<double> motion_hz_logger("motion_hz");
+*/
 void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
 	static auto prev_time = std::chrono::high_resolution_clock::now();
@@ -351,7 +353,7 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		ntimes++;
 		auto now = std::chrono::high_resolution_clock::now();
 		if (std::chrono::duration_cast<std::chrono::seconds>(now - prev_time).count() >= 10) { 
-			motion_hz_logger.log((double)ntimes / 10.0);
+			// motion_hz_logger.log((double)ntimes / 10.0);
 			ntimes = 0;
 			prev_time = now;
 		}
@@ -413,7 +415,7 @@ void Camera::resetPosition() {
 	m_obs->cameraPositionYaw = 0.0;
 }
 
-VariableLogger<double> position_hz_logger("position_hz");
+// VariableLogger<double> position_hz_logger("position_hz");
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
 	double x, y;
@@ -437,7 +439,7 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		ntimes++;
 		auto now = std::chrono::high_resolution_clock::now();
 		if (std::chrono::duration_cast<std::chrono::seconds>(now- prev_time).count() >= 10) { 
-			position_hz_logger.log((double)ntimes / 10.0);
+			// position_hz_logger.log((double)ntimes / 10.0);
 			ntimes = 0;
 			prev_time = now;
 		}

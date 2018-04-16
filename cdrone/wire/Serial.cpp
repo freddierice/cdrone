@@ -8,7 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "wire/Serial.h"
 
 

@@ -12,7 +12,7 @@
 #include "hardware/Infrared.h"
 #include "hardware/Skyline.h"
 #include "misc/Config.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "wire/MultiWii.h"
 #include "wire/Serial.h"
 #include "wire/Server.h"

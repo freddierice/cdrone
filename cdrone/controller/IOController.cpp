@@ -1,5 +1,4 @@
 #include "controller/IOController.h"
-#include "misc/logging.h"
 
 IOController::IOController(Config &config) : m_server(config) {
 }

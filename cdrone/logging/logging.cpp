@@ -1,4 +1,4 @@
-#include "misc/logging.h"
+#include "logging/logging.h"
 
 #include <proto/log.pb.h>
 
@@ -39,12 +39,17 @@ namespace logging {
 		mappings = std::ofstream(logging_name + "/" + "map", std::ofstream::out);
 	}
 
-	void write_map(std::string name, int id, int size) {
+	void write_map(std::string name, Variable var, int id) {
 		proto::Map map;
 		map.Clear();
 		map.set_name(name);
 		map.set_id((uint32_t)id);
-		map.set_size((uint32_t)size);
+		map.set_size((uint32_t)var.size());
+
+		for (auto var_name = var.names().begin(); var_name != var.names().end(); var_name++)
+			map.add_var_names(*var_name);
+		for (auto type_name = var.types().begin(); type_name != var.types().end(); type_name++)
+			map.add_type_names(*type_name);
 
 		uint32_t len_send = htonl(map.ByteSize());
 		mappings.write((const char *)&len_send, sizeof(len_send));
@@ -83,7 +88,7 @@ namespace logging {
 	}
 
 	void clean_variable_logging() {
-		logging::mappings.close();
+		mappings.close();
 
 		struct archive *a;
 		int current = 0;
@@ -91,9 +96,9 @@ namespace logging {
 		a = archive_write_new();
 		archive_write_add_filter_gzip(a);
 		archive_write_set_format_pax_restricted(a);
-		archive_write_open_filename(a, (logging::logging_name + ".logz").c_str());
-		logging::archive_add(a, "map");
-		while(logging::archive_add(a, std::to_string(current++))) {}
+		archive_write_open_filename(a, (logging_name + ".logz").c_str());
+		archive_add(a, "map");
+		while(archive_add(a, std::to_string(current++))) {}
 		archive_write_close(a);
 		archive_write_free(a);
 
@@ -111,4 +116,56 @@ namespace logging {
 		unlinkat(dir_fd, logging_name.c_str(), AT_REMOVEDIR);
 		::close(dir_fd);
 	}
+
+	VariableLogger::VariableLogger(std::string name, Variable variable) : m_name(name), m_size(variable.size()) {
+		std::lock_guard<std::mutex> lock(constructor_lock);
+		// the first logger needs to initialize the library
+		if (created == destroyed)
+			initialize_variable_logging();
+
+		m_id = created++;
+		write_map(m_name, variable, m_id);
+		if ((m_fd = open((logging_name + "/" + std::to_string(m_id)).c_str(), O_RDWR | O_CREAT, 0644)) == -1) {
+			throw std::exception();
+		}
+		m_ptr = (char *)m_buffer;
+	}
+
+	VariableLogger::~VariableLogger() {
+		std::lock_guard<std::mutex> lock(constructor_lock);
+		flush();
+		::close(m_fd);
+		destroyed++;
+		if (destroyed != created)
+			return;
+
+		// flush all and zip up the logs
+		clean_variable_logging();
+	}
+
+	void VariableLogger::log(void *variable) {
+		uint64_t time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+		if (m_ptr - m_buffer + m_size + sizeof(time) > sizeof(m_buffer)) {
+			flush();
+		}
+		*(uint64_t *)m_ptr = time;
+		m_ptr += sizeof(time);
+		memcpy(m_ptr, (void *)variable, m_size);
+		m_ptr += m_size;
+	}
+
+	void VariableLogger::flush() {
+		if (m_ptr - m_buffer == 0)
+			return;
+		int total = 0;
+		while (m_ptr - m_buffer - total) {
+			int len = write(m_fd, (void *)(m_buffer+total), m_ptr - m_buffer - total);
+			if (len == -1) {
+				throw std::exception();
+			}
+			total += len;
+		}
+		m_ptr = m_buffer;
+	}
+
 }

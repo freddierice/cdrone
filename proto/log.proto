@@ -8,5 +8,7 @@ message Map {
 	string name = 1;
 	uint32 id = 2;
 	uint32 size = 3;
+	repeated string type_names = 4;
+	repeated string var_names = 5;
 }
 

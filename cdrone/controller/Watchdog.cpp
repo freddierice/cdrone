@@ -6,7 +6,7 @@
 #include <sys/time.h>
 
 #include "controller/Watchdog.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 
 Watchdog::Watchdog(std::chrono::milliseconds duration) : Watchdog(duration, 
 		"(no name)") {}
