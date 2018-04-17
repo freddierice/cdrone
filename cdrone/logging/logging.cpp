@@ -39,16 +39,18 @@ namespace logging {
 		mappings = std::ofstream(logging_name + "/" + "map", std::ofstream::out);
 	}
 
-	void write_map(std::string name, Variable var, int id) {
+	void write_map(std::string name, Variable *var, int id) {
 		proto::Map map;
 		map.Clear();
 		map.set_name(name);
 		map.set_id((uint32_t)id);
-		map.set_size((uint32_t)var.size());
-
-		for (auto var_name = var.names().begin(); var_name != var.names().end(); var_name++)
+		map.set_size((uint32_t)var->size());
+		
+		auto names = var->names();
+		auto types = var->types();
+		for (auto var_name = names.begin(); var_name != names.end(); var_name++)
 			map.add_var_names(*var_name);
-		for (auto type_name = var.types().begin(); type_name != var.types().end(); type_name++)
+		for (auto type_name = types.begin(); type_name != types.end(); type_name++)
 			map.add_type_names(*type_name);
 
 		uint32_t len_send = htonl(map.ByteSize());
@@ -117,7 +119,7 @@ namespace logging {
 		::close(dir_fd);
 	}
 
-	VariableLogger::VariableLogger(std::string name, Variable variable) : m_name(name), m_size(variable.size()) {
+	VariableLogger::VariableLogger(std::string name, Variable *variable) : m_name(name), m_size(variable->size()) {
 		std::lock_guard<std::mutex> lock(constructor_lock);
 		// the first logger needs to initialize the library
 		if (created == destroyed)

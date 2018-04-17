@@ -56,7 +56,7 @@ typedef struct RC_struct {
 	uint16_t aux1;
 } __attribute__((packed)) RC_t;
 
-logging::VariableLogger rc_logger("rc", logging::rc_variable);
+logging::VariableLogger rc_logger("rc", &logging::rc_variable);
 void Skyline::sendRC() {
 	logging::rc_t rc;
 	

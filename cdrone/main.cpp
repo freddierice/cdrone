@@ -9,7 +9,7 @@
 #include "controller/Watchdog.h"
 #include "misc/Config.h"
 #include "misc/exception.h"
-#include "misc/logging.h"
+#include "logging/logging.h"
 #include "program/cdrone.h"
 #include "program/test.h"
 

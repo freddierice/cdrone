@@ -12,12 +12,13 @@ namespace logging {
 		} __attribute__((packed)) rc_t;
 
 	class RcVariable : public Variable {
+		public:
 		virtual std::string name() {
 			return "rc";
-		};
-		virtual unsigned int size() {
+		}
+		virtual unsigned int size() override {
 			return  sizeof(uint16_t) +  sizeof(uint16_t) +  sizeof(uint16_t) +  sizeof(uint16_t) +  sizeof(uint16_t) +  0;
-		};
+		}
 		virtual std::vector<std::string> names() {
 			return {
 			 "roll",
@@ -27,7 +28,7 @@ namespace logging {
 			 "aux1",
 			
 			};
-		};
+		}
 		virtual std::vector<std::string> types() {
 			return {
 			 "uint16_t",
@@ -37,7 +38,7 @@ namespace logging {
 			 "uint16_t",
 			
 			};
-		};
+		}
 	};
 	RcVariable rc_variable;
 }

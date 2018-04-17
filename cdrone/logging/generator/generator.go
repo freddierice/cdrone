@@ -55,22 +55,22 @@ namespace logging {
 	class {{.Name | Title}}Variable : public Variable {
 		virtual std::string name() {
 			return "{{.Name}}";
-		};
+		}
 		virtual unsigned int size() {
 			return {{range $i, $x := $.TypePairs}} sizeof({{$x.TypeName}}) + {{end}} 0;
-		};
+		}
 		virtual std::vector<std::string> names() {
 			return {
 			{{range $i, $x := $.TypePairs}} "{{$x.VarName}}",
 			{{end}}
 			};
-		};
+		}
 		virtual std::vector<std::string> types() {
 			return {
 			{{range $i, $x := $.TypePairs}} "{{$x.TypeName}}",
 			{{end}}
 			};
-		};
+		}
 	};
 	{{.Name | Title}}Variable {{.Name}}_variable;
 }

@@ -47,12 +47,13 @@ namespace logging {
 
 	class VariableLogger {
 	public:
-		VariableLogger(std::string name, Variable variable);
+		VariableLogger(std::string name, Variable *variable);
 		~VariableLogger();
 		
 		void log(void *variable);
 
 	private:
+		VariableLogger() = delete;
 		void flush();
 
 		const std::string m_name;
