@@ -144,6 +144,15 @@ RUN cd /home/user \
 	&& make \
 	&& make install
 
+RUN cd /home/user \
+	&& git clone https://github.com/vrpn/vrpn.git \
+	&& mkdir vrpn/build \
+	&& cd vrpn/build \
+	&& CC=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-gcc CXX=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-g++ cmake -G "Unix Makefiles" ../ \
+	&& make -j4 \
+	&& mv quat/libquat.a *.a /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/ \
+	&& cp -r ../*.h /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/
+
 WORKDIR /home/user/cdrone
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["bash", "-c", "make"]
