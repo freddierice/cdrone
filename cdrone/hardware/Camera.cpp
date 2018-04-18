@@ -6,6 +6,7 @@
 
 #include "hardware/Camera.h"
 #include "logging/logging.h"
+#include "logging/vector2.h"
 #include "misc/utility.h"
 
 #include <pthread.h>
@@ -333,30 +334,14 @@ void Camera::callbackControl(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	mmal_buffer_header_release(buffer);
 }
 
-/*
-typedef struct motion_struct {
-	double x_motion;
-	double y_motion;
-} __attribute__((packed)) motion_t;
-VariableLogger<motion_t> motion_logger("motion");
-VariableLogger<double> motion_hz_logger("motion_hz");
-*/
+logging::VariableLogger motion_logger("camera_motion", &logging::vector2_variable);
 void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
-	static auto prev_time = std::chrono::high_resolution_clock::now();
-	static int ntimes = 0;
+	logging::vector2_t motion2;
 	if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) {
 		// we have an inline vector, lets use it.
 		double x_motion = 0.0;
 		double y_motion = 0.0;
-		
-		ntimes++;
-		auto now = std::chrono::high_resolution_clock::now();
-		if (std::chrono::duration_cast<std::chrono::seconds>(now - prev_time).count() >= 10) { 
-			// motion_hz_logger.log((double)ntimes / 10.0);
-			ntimes = 0;
-			prev_time = now;
-		}
 		
 		mmal_buffer_header_mem_lock(buffer);
 		auto last = (MotionData*)buffer->data + camera->m_blocks;
@@ -366,6 +351,11 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 			y_motion += block->y;
 		}
 		mmal_buffer_header_mem_unlock(buffer);
+
+		// log motion
+		motion2.x = x_motion;
+		motion2.y = y_motion;
+		motion_logger.log(&motion2);
 
 		x_motion /= camera->m_blocks;
 		y_motion /= -camera->m_blocks;
@@ -415,12 +405,12 @@ void Camera::resetPosition() {
 	m_obs->cameraPositionYaw = 0.0;
 }
 
-// VariableLogger<double> position_hz_logger("position_hz");
+logging::VariableLogger position_logger("camera_position", &logging::vector2_variable);
+logging::VariableLogger position_raw_logger("camera_position_raw", &logging::vector2_variable);
 void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 	Camera *camera = (Camera *)port->userdata;
+	logging::vector2_t pos2, pos2_raw;
 	double x, y;
-	static auto prev_time = std::chrono::high_resolution_clock::now();
-	static int ntimes = 0;
 
 	// TODO: speed up by swapping frame buffers.
 
@@ -436,14 +426,6 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		::memcpy(camera->m_currentFrameBuffer, buffer->data, buffer->length);
 		mmal_buffer_header_mem_unlock(buffer);
 
-		ntimes++;
-		auto now = std::chrono::high_resolution_clock::now();
-		if (std::chrono::duration_cast<std::chrono::seconds>(now- prev_time).count() >= 10) { 
-			// position_hz_logger.log((double)ntimes / 10.0);
-			ntimes = 0;
-			prev_time = now;
-		}
-		
 		// if this is first frame, keep it.
 		if (!camera->m_hasFirstFrame) {
 			camera->m_hasFirstFrame = true;
@@ -458,10 +440,17 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 				camera->m_currentFrame, false);
 		if (!estimate.empty()) {
 			// slowly transition from lost frame to position.
-			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
-			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+			x = estimate.at<double>(0,2);		
+			y = estimate.at<double>(1,2);
+			pos2_raw.x = x;
+			pos2_raw.y = y;
+			position_raw_logger.log(&pos2);
+			x = -1.0*x * 2.0/240.0 * camera->m_obs->infraredHeight;
+			y = y * 2.0/320.0 * camera->m_obs->infraredHeight;
 			camera->m_obs->cameraPositionX = x*ALPHA + camera->m_obs->cameraPositionX*(1.0-ALPHA);
 			camera->m_obs->cameraPositionY = y*ALPHA + camera->m_obs->cameraPositionY*(1.0-ALPHA);
+			pos2.x = camera->m_obs->cameraPositionX;
+			pos2.y = camera->m_obs->cameraPositionY;
 			goto done;
 		}
 
@@ -469,15 +458,23 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		estimate = cv::estimateRigidTransform(camera->m_previousFrame,
 				camera->m_currentFrame, false);
 		if (!estimate.empty()) {
-			x = -1.0*estimate.at<double>(0,2) * 2.0/240.0 * camera->m_obs->infraredHeight;
-			y = estimate.at<double>(1,2) * 2.0/320.0 * camera->m_obs->infraredHeight;
+			x = estimate.at<double>(0,2);
+			y = estimate.at<double>(1,2);
+			pos2_raw.x = x;
+			pos2_raw.y = y;
+			x = -1.0*x * 2.0/240.0 * camera->m_obs->infraredHeight;
+			y = y * 2.0/320.0 * camera->m_obs->infraredHeight;
 			
 			// add the delta
 			camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
 			camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
+			pos2.x = camera->m_obs->cameraPositionX;
+			pos2.y = camera->m_obs->cameraPositionY;
 		}
 
 done:
+		position_logger.log(&pos2);
+		position_raw_logger.log(&pos2_raw);
 		// copy current frame to the previous
 		::memcpy(camera->m_previousFrameBuffer, camera->m_currentFrameBuffer, camera->m_frameBufferLength);
 	}

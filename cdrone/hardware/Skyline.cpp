@@ -4,6 +4,7 @@
 #include "hardware/Skyline.h"
 #include "logging/logging.h"
 #include "logging/rc.h"
+#include "logging/imu.h"
 #include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
