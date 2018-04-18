@@ -7,13 +7,19 @@ TARGET:=cdrone
 .PHONY: docker pkg
 
 PROTOS=$(patsubst ../proto/%.proto,proto/%.pb.h,$(wildcard ../proto/*.proto))
-all: proto $(PROTOS) $(TARGET)
+all: logging/generator/generator logging/generated.cpp proto $(PROTOS) $(TARGET)
 
 #MODULES=controller hardware json programs wire
-OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */*.cc)) main.o proto/io.pb.o proto/log.pb.o
+OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */*.cc)) main.o proto/io.pb.o proto/log.pb.o logging/generated.o
 
 %.cpp: %.h
 %.cc: %.h
+
+logging/generator/generator:
+	@make -C logging/generator
+
+logging/generated.cpp:
+	@./logging/generator/generator ./logging/generator/generator.conf ./logging
 
 proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
 	protoc -I=../proto --cpp_out=proto $<
@@ -34,7 +40,7 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)
 
 clean:
-	@rm -f $(TARGET) *.o */*.o proto/*.pb.*
+	@rm -f $(TARGET) *.o */*.o proto/*.pb.* logging/generator/generator logging/generated.cpp
 
 pkg:
 	./pkg

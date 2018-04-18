@@ -1,55 +1,113 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
-// Context holds the TypePairs
-type Context struct {
-	Name      string
-	TypePairs []TypePair
+var headerTmpl, cppTmpl *template.Template
+
+// HeaderContext holds the TypePairs
+type HeaderContext struct {
+	Name      string            `json:"name"`
+	TypePairs map[string]string `json:"typePairs"`
 }
 
-// TypePair holds a (typename, varname) pair.
-type TypePair struct {
-	TypeName string
-	VarName  string
+// CppContext holds context for Cpp template execution.
+type CppContext struct {
+	Name  string
+	Types []HeaderContext
 }
 
 func main() {
-	if len(os.Args) < 4 || len(os.Args)%2 != 0 {
-		fmt.Printf("usage: %v <name> <typename1> <varname1> [(<typename2> <varname2>) ...]\n", os.Args[0])
+	if len(os.Args) != 3 {
+		fmt.Printf("usage: %v <conf> <out directory>\n", os.Args[0])
 		return
 	}
 
-	typePairs := make([]TypePair, (len(os.Args)-2)/2)
-	for i := 0; i < len(typePairs); i++ {
-		typePairs[i] = TypePair{
-			TypeName: os.Args[2+i*2],
-			VarName:  os.Args[3+i*2],
+	createTemplates()
+
+	confFilename := os.Args[1]
+	outDir, err := filepath.Abs(os.Args[2] + "/")
+	if err != nil {
+		fmt.Printf("bad path\n")
+		os.Exit(1)
+	}
+
+	confBytes, err := ioutil.ReadFile(confFilename)
+	if err != nil {
+		fmt.Printf("error parsing generator.conf: %v\n", err)
+		os.Exit(1)
+	}
+
+	contextArray := []HeaderContext{}
+	err = json.Unmarshal(confBytes, &contextArray)
+
+	for _, ctx := range contextArray {
+		err = writePair(outDir, ctx)
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+			os.Exit(1)
 		}
 	}
+
+	cppContext := CppContext{
+		Name:  "generated",
+		Types: contextArray,
+	}
+	err = writeCpp(outDir, cppContext)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func writeCpp(dir string, cppContext CppContext) error {
+
+	cppFile, err := os.Create(path.Join(dir, cppContext.Name+".cpp"))
+	if err != nil {
+		return err
+	}
+	defer cppFile.Close()
+
+	cppTmpl.Execute(cppFile, cppContext)
+	return nil
+}
+
+func writePair(dir string, headerContext HeaderContext) error {
+
+	headerFile, err := os.Create(path.Join(dir, headerContext.Name+".h"))
+	if err != nil {
+		return err
+	}
+	defer headerFile.Close()
+
+	headerTmpl.Execute(headerFile, headerContext)
+	return nil
+}
+
+func createTemplates() {
+
+	var err error
 
 	funcMap := template.FuncMap{
 		"ToUpper": strings.ToUpper,
 		"Title":   strings.Title,
 	}
 
-	context := Context{
-		Name:      os.Args[1],
-		TypePairs: typePairs,
-	}
-
-	tmplCode := `#ifndef __LOGGER_{{.Name | ToUpper}}_H__ 
+	headerCode := `#ifndef __LOGGER_{{.Name | ToUpper}}_H__ 
 #define __LOGGER_{{.Name | ToUpper}}_H__ 
-#include "logging.h"
+#include "logging/logging.h"
 
 namespace logging {
-		typedef struct {{.Name}}_struct { {{range $i, $x := $.TypePairs}}
-			{{$x.TypeName}} {{$x.VarName}};{{end}}
+		typedef struct {{.Name}}_struct { {{range $name, $type := $.TypePairs}}
+			{{$type}} {{$name}};{{end}}
 		} __attribute__((packed)) {{.Name}}_t;
 
 	class {{.Name | Title}}Variable : public Variable {
@@ -57,30 +115,44 @@ namespace logging {
 			return "{{.Name}}";
 		}
 		virtual unsigned int size() {
-			return {{range $i, $x := $.TypePairs}} sizeof({{$x.TypeName}}) + {{end}} 0;
+			return {{range $name, $type := $.TypePairs}} sizeof({{$type}}) + {{end}} 0;
 		}
 		virtual std::vector<std::string> names() {
 			return {
-			{{range $i, $x := $.TypePairs}} "{{$x.VarName}}",
+			{{range $name, $type := $.TypePairs}} "{{$name}}",
 			{{end}}
 			};
 		}
 		virtual std::vector<std::string> types() {
 			return {
-			{{range $i, $x := $.TypePairs}} "{{$x.TypeName}}",
+			{{range $name, $type := $.TypePairs}} "{{$name}}",
 			{{end}}
 			};
 		}
 	};
-	{{.Name | Title}}Variable {{.Name}}_variable;
+	extern {{.Name | Title}}Variable {{.Name}}_variable;
 }
 #endif
 `
 
-	tmpl, err := template.New("TypePairs").Funcs(funcMap).Parse(tmplCode)
+	cppCode := `{{range $i, $x := .Types}}#include "logging/{{$x.Name}}.h"
+{{end}}
+
+namespace logging {
+	{{range $i, $x := .Types}}{{$x.Name | Title}}Variable {{.Name}}_variable;
+	{{end}}
+}
+`
+
+	headerTmpl, err = template.New("header").Funcs(funcMap).Parse(headerCode)
 	if err != nil {
 		fmt.Printf("%v\n", err)
-		return
+		os.Exit(1)
 	}
-	tmpl.Execute(os.Stdout, context)
+
+	cppTmpl, err = template.New("cpp").Funcs(funcMap).Parse(cppCode)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
 }

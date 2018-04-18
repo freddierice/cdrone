@@ -8,5 +8,7 @@ c_map = {
     "uint8_t": np.uint8,
     "uint16_t": np.uint16,
     "uint32_t": np.uint32,
-    "uint64_t": np.uint64
+    "uint64_t": np.uint64,
+    "float": np.float,
+    "double": np.double,
 }
