@@ -48,14 +48,6 @@ void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 	m_throttle = throttle;
 }
 
-typedef struct RC_struct {
-	uint16_t roll;
-	uint16_t pitch;
-	uint16_t yaw;
-	uint16_t thrust;
-	uint16_t aux1;
-} __attribute__((packed)) RC_t;
-
 logging::VariableLogger rc_logger("rc", &logging::rc_variable);
 void Skyline::sendRC() {
 	logging::rc_t rc;

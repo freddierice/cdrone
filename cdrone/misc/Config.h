@@ -38,6 +38,9 @@ public:
 	const double& throttlePIDP() const {return m_throttlePIDP; }
 	const double& throttlePIDI() const {return m_throttlePIDI; }
 	const double& throttlePIDD() const {return m_throttlePIDD; }
+	const std::string& vrpnName() const {return m_vrpnName; }
+	const uint32_t& vrpnID() const {return m_vrpnID; }
+	const bool& vrpnEnabled() const {return m_vrpnEnabled; }
 private:
 	Json::Value m_root;
 	
@@ -64,6 +67,9 @@ private:
 	double m_throttlePIDP;
 	double m_throttlePIDI;
 	double m_throttlePIDD;
+	std::string m_vrpnName;
+	uint32_t m_vrpnID;
+	bool m_vrpnEnabled;
 };
 
 #endif /* __CONFIG_H__ */

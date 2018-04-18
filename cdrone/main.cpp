@@ -13,13 +13,15 @@
 #include "program/cdrone.h"
 #include "program/test.h"
 
+#include "main.h"
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 	
 // shutdown handlers.
-std::atomic_bool shutdown;
+std::atomic_bool global::shutdown;
 void shutdown_handler(int sig) {
-	shutdown = true;
+	global::shutdown = true;
 	console->warn("shutting down");
 }
 void setup_signals() {

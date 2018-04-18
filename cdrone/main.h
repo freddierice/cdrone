@@ -3,6 +3,8 @@
 #include <atomic>
 
 // a global atomic that is false for the duration of the program.
-extern std::atomic<bool> shutdown;
+namespace global {
+	extern std::atomic<bool> shutdown;
+}
 
 #endif /* __MAIN_H__ */

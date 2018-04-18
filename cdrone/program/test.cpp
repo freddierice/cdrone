@@ -28,7 +28,7 @@ void test_infrared(Config &config) {
 	
 	console->info("starting loop");
 	watchdog.start();
-	while (!shutdown) {
+	while (!global::shutdown) {
 		watchdog.ok();
 		infrared.update();
 		console->info("height: {}, voltage: {}", obs->infraredHeight,
@@ -49,7 +49,7 @@ void test_multiwii(Config &config) {
 	console->info("starting loop");
 	watchdog.start();
 	m.sendCMD(MultiWiiCMD::MSP_STATUS);
-	while (!shutdown) {
+	while (!global::shutdown) {
 		watchdog.ok();
 		// TODO: add multiwii tests
 	}
@@ -129,7 +129,7 @@ void test_camera(Config &config) {
 
 		console->info("starting position mode");
 		camera.enablePosition();
-		while (!shutdown) {
+		while (!global::shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			xMotion= obs->cameraVelocityX;
 			yMotion = obs->cameraVelocityY;
@@ -155,7 +155,7 @@ void test_calibrate(Config &config) {
 
 		console->info("sending calibrate");
 		skyline.sendCalibrate();
-		while (!shutdown && !skyline.calibrateDone()) {
+		while (!global::shutdown && !skyline.calibrateDone()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			skyline.update();
 		}
@@ -176,7 +176,7 @@ void test_skyline(Config &config) {
 		// skyline.sendAttitude();
 		// skyline.sendIMU();
 		// skyline.sendAnalog();
-		while (!shutdown) {
+		while (!global::shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			skyline.update();
 			console->info("vbat: {}, heading: {}", obs->skylineBattery,

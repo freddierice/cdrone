@@ -17,6 +17,7 @@
 #include "misc/utility.h"
 #include "wire/MultiWii.h"
 #include "wire/Serial.h"
+#include "position/VRPN.h"
 
 
 void do_update(Watchdog &watchdog, Infrared &infrared,
@@ -24,7 +25,7 @@ void do_update(Watchdog &watchdog, Infrared &infrared,
 	
 	console->info("update loop started");
 	watchdog.start();
-	while (!shutdown) {
+	while (!global::shutdown) {
 		watchdog.ok();
 		infrared.update();
 		flightController.updateRC();
@@ -41,7 +42,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 
 	// try to get the first message before starting the watchdog.
 	try {
-		while(!io->recvMessage(update) && !shutdown) {}
+		while(!io->recvMessage(update) && !global::shutdown) {}
 	} catch (IOException &ex) {
 		console->info("error recieving: {}", ex.what());
 		return;
@@ -49,7 +50,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 	
 	console->info("recv loop started");
 	watchdog.start();
-	while (!shutdown) {
+	while (!global::shutdown) {
 		// check the update mode
 		switch (update.mode()) {
 			case proto::NO_MODE:
@@ -130,7 +131,7 @@ void do_recv(Watchdog &watchdog, Config &config,
 		try {
 			watchdog.ok();
 			update.Clear();
-			while(!io->recvMessage(update) && !shutdown) {}
+			while(!io->recvMessage(update) && !global::shutdown) {}
 			watchdog.ok();
 		} catch (IOException &ex) {
 			console->info("error recieving: {}", ex.what());
@@ -147,7 +148,7 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 	proto::Observations protoObs;
 
 	console->info("send loop started");
-	while (!shutdown) {
+	while (!global::shutdown) {
 		protoObs.Clear();
 		protoObs.set_battery(obs->skylineBattery);
 		protoObs.set_camera_velocity_x(obs->cameraVelocityX);
@@ -202,7 +203,7 @@ void do_serve(Watchdog &watchdog, Config &config,
 		IOController &ioController,
 		FlightController &flightController,
 		std::shared_ptr<Observations> obs, Camera &camera) {
-	while (!shutdown) {
+	while (!global::shutdown) {
 		try {
 			std::shared_ptr<IO> io = ioController.accept();
 			console->info("server accepted");
@@ -228,6 +229,11 @@ void cdrone(Config &config) {
 	Watchdog updateWatchdog(config.updateWatchdog(), "update");
 	Watchdog ioWatchdog(config.ioWatchdog(), "io");
 	Watchdog controllerWatchdog(config.controllerWatchdog(), "controller");
+	std::unique_ptr<VRPN> vrpn;
+	
+	if (config.vrpnEnabled())
+		vrpn = std::make_unique<VRPN>(config.vrpnName(), config.vrpnID());
+	
 
 	// check for correct hardware
 	if (std::thread::hardware_concurrency() != 4) {

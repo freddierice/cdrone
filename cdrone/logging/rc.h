@@ -40,6 +40,6 @@ namespace logging {
 			};
 		}
 	};
-	RcVariable rc_variable;
+	extern RcVariable rc_variable;
 }
 #endif
