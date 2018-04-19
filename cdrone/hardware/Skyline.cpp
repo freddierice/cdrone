@@ -49,9 +49,18 @@ void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 	m_throttle = throttle;
 }
 
+typedef struct RC_struct {
+	uint16_t roll;
+	uint16_t pitch;
+	uint16_t yaw;
+	uint16_t thrust;
+	uint16_t aux1;
+} RC_t;
+
 logging::VariableLogger rc_logger("rc", &logging::rc_variable);
 void Skyline::sendRC() {
-	logging::rc_t rc;
+	RC_t rc;
+	logging::rc_t rc_log;
 	
 #if defined(__BYTE_ORDER__) &&__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	rc.roll = m_roll;
@@ -64,9 +73,15 @@ void Skyline::sendRC() {
 #else
 	#error "Compiler is not compatible -- use GCC"
 #endif
+
+	rc_log.roll = rc.roll;
+	rc_log.pitch = rc.pitch;
+	rc_log.yaw = rc.yaw;
+	rc_log.thrust = rc.thrust;
+	rc_log.aux1 = rc.aux1;
 	
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 10);
-	rc_logger.log((void *)&rc);
+	rc_logger.log((void *)&rc_log);
 }
 
 void Skyline::sendCalibrate() {
@@ -89,6 +104,7 @@ void Skyline::sendAnalog() {
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_ANALOG);
 }
 
+logging::VariableLogger imu_logger("imu", &logging::imu_variable);
 void Skyline::update() {
 	MultiWiiResponse resp;
 	MSP_ATTITUDE_T *attitude;
@@ -132,6 +148,22 @@ void Skyline::update() {
 				m_obs->skylineAngRollVel = m_obs->skylineDAngRoll/dt;
 				m_obs->skylineAngPitchVel = m_obs->skylineDAngPitch/dt;
 				m_obs->skylineAngYawVel = m_obs->skylineDAngYaw/dt;
+
+				logging::imu_t imu_log;
+
+				imu_log.ang_roll = m_obs->skylineAngRoll;
+				imu_log.ang_pitch = m_obs->skylineAngPitch;
+				imu_log.ang_yaw = m_obs->skylineAngYaw;
+				
+				imu_log.dang_roll = m_obs->skylineDAngRoll;
+				imu_log.dang_pitch = m_obs->skylineDAngPitch;
+				imu_log.dang_yaw = m_obs->skylineDAngYaw;
+
+				imu_log.ang_vel_roll = m_obs->skylineAngRollVel;
+				imu_log.ang_vel_pitch = m_obs->skylineAngPitchVel;
+				imu_log.ang_vel_yaw = m_obs->skylineAngYawVel;
+
+				imu_logger.log((void *)&imu_log);
 
 				// m_attitudeFlag = false;
 				sendAttitude();

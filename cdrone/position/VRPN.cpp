@@ -2,9 +2,12 @@
 
 #include "logging/vrpn.h"
 
-VRPN::VRPN(std::string name, int sensor) : m_stop(false), m_thread(&VRPN::do_main, this),
-	m_logger("vrpn", &logging::vrpn_variable), m_remote(name.c_str()) {
-	m_remote.register_change_handler(this, VRPN::callback, sensor);
+#include <iostream>
+
+VRPN::VRPN(std::string name, int sensor) : m_stop(false),
+	m_logger("vrpn", &logging::vrpn_variable), m_remote(name.c_str()), m_thread(&VRPN::do_main, this) {
+	// m_remote.register_change_handler(this, VRPN::callback, sensor);
+	m_remote.register_change_handler(this, VRPN::callback);
 }
 
 VRPN::~VRPN() {
@@ -13,7 +16,7 @@ VRPN::~VRPN() {
 }
 
 void VRPN::do_main() {
-	while (m_stop) {
+	while (!m_stop) {
 		m_remote.mainloop();
 	}
 }

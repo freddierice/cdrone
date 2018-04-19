@@ -17,9 +17,9 @@ private:
 	static void VRPN_CALLBACK callback(void *, const vrpn_TRACKERCB t);
 	
 	std::atomic<bool> m_stop;
-	std::thread m_thread;
 	logging::VariableLogger m_logger;
 	vrpn_Tracker_Remote m_remote;
+	std::thread m_thread;
 };
 
 #endif

@@ -13,6 +13,7 @@ Watchdog::Watchdog(std::chrono::milliseconds duration) : Watchdog(duration,
 Watchdog::Watchdog(std::chrono::milliseconds duration,
 		const std::string &name) : m_name(name) {
 	m_id = m_nextThreadID++;
+	m_names.at(m_id) = name;
 	m_duration = duration;
 	if (m_id >= m_nWatchdogs)
 		throw std::runtime_error("too many watchdogs created");
@@ -38,6 +39,7 @@ void Watchdog::initialize(int n) {
 	m_counts = new std::atomic<uint64_t>[n]();
 	m_maxes = new uint64_t[n]();
 	m_shutdown = false;
+	m_names.resize(n);
 
 	m_thread = std::thread(check_thread);
 }
@@ -81,6 +83,7 @@ void Watchdog::check_thread() {
 		for (uint64_t i = 0; i < m_nWatchdogs; i++)
 			if (m_maxes[i] != 0 && m_counts[i] > m_maxes[i]) {
 				// TODO: add killing name.
+				std::cerr << "killing: " << m_names[i] << std::endl << std::flush;
 				kill(0, SIGALRM);
 			}
 	}
@@ -101,12 +104,13 @@ void Watchdog::stop() {
 
 
 // initialize static members of Watchdog
-const std::chrono::milliseconds Watchdog::EPOCH(100);
+const std::chrono::milliseconds Watchdog::EPOCH(200);
 
 std::atomic<uint64_t> Watchdog::m_nextThreadID;
 std::atomic<uint64_t>* Watchdog::m_counts;
 uint64_t* Watchdog::m_maxes;
 uint64_t Watchdog::m_nWatchdogs;
 std::atomic<bool> Watchdog::m_shutdown;
+std::vector<std::string> Watchdog::m_names;
 std::thread Watchdog::m_thread;
 

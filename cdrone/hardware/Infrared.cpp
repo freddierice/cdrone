@@ -1,4 +1,5 @@
 #include "hardware/Infrared.h"
+#include "logging/value.h"
 
 Infrared::Infrared(Config &config, std::shared_ptr<Observations> obs) : 
 	Infrared(config.infraredAlpha(), config.infraredB(), config.infraredK(), obs) {}
@@ -32,9 +33,12 @@ Infrared::~Infrared() {
 	m_adc.setConfig(m_defaultConfig);
 }
 
+logging::VariableLogger height_logger("height", &logging::value_variable);
+logging::VariableLogger height_raw_logger("height_raw", &logging::value_variable);
 void Infrared::update() {
 	double newDistance, oldDistance;
 	uint16_t newVoltage;
+	logging::value_t value;
 
 	// get latest reading
 	newVoltage = m_adc.getConversion();
@@ -46,6 +50,10 @@ void Infrared::update() {
 
 	// convert the voltage to raw distance
 	newDistance = m_k/(double)newVoltage + m_b;
+	
+	// log non-smoothed
+	value.value = newDistance;
+	height_raw_logger.log(&value);
 
 	// do smoothed distance
 	oldDistance = m_obs->infraredHeight;
@@ -54,6 +62,10 @@ void Infrared::update() {
 	// update the atomics
 	m_obs->infraredHeight = newDistance;
 	m_obs->infraredVoltage = newVoltage;
+
+	// log smoothed
+	value.value = newDistance;
+	height_logger.log(&value);
 }
 
 const uint16_t Infrared::MIN_READING = 2000;

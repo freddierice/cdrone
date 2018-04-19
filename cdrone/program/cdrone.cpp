@@ -204,6 +204,7 @@ void do_serve(Watchdog &watchdog, Config &config,
 		FlightController &flightController,
 		std::shared_ptr<Observations> obs, Camera &camera) {
 	while (!global::shutdown) {
+		watchdog.stop();
 		try {
 			std::shared_ptr<IO> io = ioController.accept();
 			console->info("server accepted");

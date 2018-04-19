@@ -1,6 +1,7 @@
 #ifndef __WATCHDOG__
 #define __WATCHDOG__
 #include <iostream>
+#include <vector>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -45,6 +46,7 @@ private:
 	static std::thread m_thread;
 	static std::atomic<bool> m_shutdown;
 	static const std::chrono::milliseconds EPOCH;
+	static std::vector<std::string> m_names;
 	
 	const std::string m_name;
 	uint64_t m_id;

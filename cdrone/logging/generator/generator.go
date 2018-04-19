@@ -125,7 +125,7 @@ namespace logging {
 		}
 		virtual std::vector<std::string> types() {
 			return {
-			{{range $name, $type := $.TypePairs}} "{{$name}}",
+			{{range $name, $type := $.TypePairs}} "{{$type}}",
 			{{end}}
 			};
 		}
