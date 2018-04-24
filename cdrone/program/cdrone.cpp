@@ -26,9 +26,12 @@ void do_update(Watchdog &watchdog, Infrared &infrared,
 	console->info("update loop started");
 	watchdog.start();
 	while (!global::shutdown) {
+		// add watchdog between each update for higher granularity
 		watchdog.ok();
 		infrared.update();
+		watchdog.ok();
 		flightController.updateRC();
+		watchdog.ok();
 		flightController.updateController();
 	}
 	watchdog.stop();

@@ -42,6 +42,7 @@ Config::Config(const std::string &filename) {
 		m_throttlePIDP = m_root.get("throttlePIDP", 0.0).asDouble();
 		m_throttlePIDI = m_root.get("throttlePIDI", 0.0).asDouble();
 		m_throttlePIDD = m_root.get("throttlePIDD", 0.0).asDouble();
+		m_throttlePIDK = m_root.get("throttlePIDK", 0.0).asDouble();
 		m_vrpnName = m_root.get("vrpnName", "").asString();
 		m_vrpnID = m_root.get("vrpnID", 0).asInt();
 		m_vrpnEnabled = m_root.get("vrpnEnabled", false).asBool();

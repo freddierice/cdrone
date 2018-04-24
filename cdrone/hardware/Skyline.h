@@ -1,6 +1,7 @@
 #ifndef __SKYLINE_H__
 #define __SKYLINE_H__
 
+#include <chrono>
 #include <memory>
 
 #include <inttypes.h>
@@ -42,6 +43,7 @@ public:
 	static const unsigned char CMD_ARM[];
 	static const unsigned char CMD_DISARM[];
 	static const double ACC_RAW_TO_MSS;
+	static const double GYRO_RAW_TO_RAD;
 	static const double ACC_X_ZERO;
 	static const double ACC_Y_ZERO;
 	static const double ACC_Z_ZERO;
@@ -80,6 +82,7 @@ private:
 
 	// time
 	double m_lastAttitudeTime;
+	std::chrono::high_resolution_clock::time_point m_lastAnalog;
 
 	// ticks
 	int m_ticks;

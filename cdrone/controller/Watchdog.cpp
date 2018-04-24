@@ -104,7 +104,7 @@ void Watchdog::stop() {
 
 
 // initialize static members of Watchdog
-const std::chrono::milliseconds Watchdog::EPOCH(200);
+const std::chrono::milliseconds Watchdog::EPOCH(50);
 
 std::atomic<uint64_t> Watchdog::m_nextThreadID;
 std::atomic<uint64_t>* Watchdog::m_counts;

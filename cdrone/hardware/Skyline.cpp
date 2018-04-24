@@ -4,13 +4,15 @@
 #include "hardware/Skyline.h"
 #include "logging/logging.h"
 #include "logging/rc.h"
-#include "logging/imu.h"
+#include "logging/attitude.h"
+#include "logging/vector3.h"
 #include "misc/utility.h"
 
 Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
 		config.skylinePort()), m_multiwii(m_serial), m_obs(obs),
 		m_calibrateFlag(false), m_attitudeFlag(false), m_imuFlag(false),
-		m_analogFlag(false), m_armed(false), m_lastAttitudeTime(0.0), m_ticks(0),
+		m_analogFlag(false), m_armed(false), m_lastAttitudeTime(0.0),
+		m_lastAnalog(std::chrono::high_resolution_clock::now()), m_ticks(0),
 		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000) {
 	setIdle();
 	start();
@@ -104,7 +106,9 @@ void Skyline::sendAnalog() {
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_ANALOG);
 }
 
-logging::VariableLogger imu_logger("imu", &logging::imu_variable);
+logging::VariableLogger attitude_logger("attitude", &logging::attitude_variable);
+logging::VariableLogger acc_logger("acc", &logging::vector3_variable);
+logging::VariableLogger gyro_logger("gyro", &logging::vector3_variable);
 void Skyline::update() {
 	MultiWiiResponse resp;
 	MSP_ATTITUDE_T *attitude;
@@ -112,6 +116,13 @@ void Skyline::update() {
 	MSP_IMU_T *imu;
 	double lastRoll, lastPitch, lastYaw;
 	double now, dt;
+
+	// ask for battery every 3 seconds.
+	auto now_time = std::chrono::high_resolution_clock::now();
+	if (now_time - m_lastAnalog > std::chrono::seconds(3)) {
+		m_lastAnalog = now_time;
+		sendAnalog();
+	}
 
 	// process it. (expect to process one of each)
 	for (int i = 0; i < 4; i++) {
@@ -135,35 +146,26 @@ void Skyline::update() {
 				lastPitch = m_obs->skylineAngPitch;
 				lastYaw = m_obs->skylineAngYaw;
 
+				// calculate the variables and log them
+				logging::attitude_t att;
+				att.roll = (((double)attitude->angx) + 1800.0) / 1800.0 * M_PI;
+				att.pitch = (((double)attitude->angy) + 900.0) / 900.0 * M_PI;
+				att.yaw = ((double)attitude->heading) / 180.0 * M_PI;
+				attitude_logger.log(&att);
+
 				// update the now vars
-				m_obs->skylineAngRoll = (((double)attitude->angx) + 1800.0) / 1800.0 * M_PI;
-				m_obs->skylineAngPitch = (((double)attitude->angy) + 900.0) / 900.0 * M_PI; ;
-				m_obs->skylineAngYaw = ((double)attitude->heading) / 180.0 * M_PI;
+				m_obs->skylineAngRoll = att.roll;
+				m_obs->skylineAngPitch = att.pitch;
+				m_obs->skylineAngYaw = att.yaw;
 
 				// get new angle diffs
-				m_obs->skylineDAngRoll = atan2(sin(m_obs->skylineAngRoll - lastRoll), cos(m_obs->skylineAngRoll - lastRoll));
-				m_obs->skylineDAngPitch = atan2(sin(m_obs->skylineAngPitch - lastPitch), cos(m_obs->skylineAngPitch - lastPitch));
-				m_obs->skylineDAngYaw = atan2(sin(m_obs->skylineAngYaw - lastYaw), cos(m_obs->skylineAngYaw - lastYaw));
+				m_obs->skylineDAngRoll = atan2(sin(att.roll - lastRoll), cos(att.roll - lastRoll));
+				m_obs->skylineDAngPitch = atan2(sin(att.pitch - lastPitch), cos(att.pitch - lastPitch));
+				m_obs->skylineDAngYaw = atan2(sin(att.yaw - lastYaw), cos(att.yaw - lastYaw));
 
 				m_obs->skylineAngRollVel = m_obs->skylineDAngRoll/dt;
 				m_obs->skylineAngPitchVel = m_obs->skylineDAngPitch/dt;
 				m_obs->skylineAngYawVel = m_obs->skylineDAngYaw/dt;
-
-				logging::imu_t imu_log;
-
-				imu_log.ang_roll = m_obs->skylineAngRoll;
-				imu_log.ang_pitch = m_obs->skylineAngPitch;
-				imu_log.ang_yaw = m_obs->skylineAngYaw;
-				
-				imu_log.dang_roll = m_obs->skylineDAngRoll;
-				imu_log.dang_pitch = m_obs->skylineDAngPitch;
-				imu_log.dang_yaw = m_obs->skylineDAngYaw;
-
-				imu_log.ang_vel_roll = m_obs->skylineAngRollVel;
-				imu_log.ang_vel_pitch = m_obs->skylineAngPitchVel;
-				imu_log.ang_vel_yaw = m_obs->skylineAngYawVel;
-
-				imu_logger.log((void *)&imu_log);
 
 				// m_attitudeFlag = false;
 				sendAttitude();
@@ -172,19 +174,31 @@ void Skyline::update() {
 				analog = (MSP_ANALOG_T *)resp.m_data;
 				m_obs->skylineBattery = (double)analog->vbat/10.0;
 				// m_analogFlag = false;
-				sendAnalog();
 				break;
 			case MSP_RAW_IMU:
 				// XXX: using TA values... figure out a better way.
 				imu = (MSP_IMU_T *)resp.m_data;
-				m_obs->skylineAccX = (imu->accx-ACC_X_ZERO)*ACC_RAW_TO_MSS;
-				m_obs->skylineAccY = (imu->accy-ACC_Y_ZERO)*ACC_RAW_TO_MSS;
-				m_obs->skylineAccZ = (imu->accz-ACC_Z_ZERO)*ACC_RAW_TO_MSS;
-				m_obs->skylineGyroX = imu->gyrx;
-				m_obs->skylineGyroY = imu->gyry;
-				m_obs->skylineGyroZ = imu->gyrz;
+				logging::vector3_t acc_log, gyro_log;
+				
+				acc_log.x = (imu->accx-ACC_X_ZERO)*ACC_RAW_TO_MSS;
+				acc_log.y = (imu->accy-ACC_Y_ZERO)*ACC_RAW_TO_MSS;
+				acc_log.z = (imu->accz-ACC_Z_ZERO)*ACC_RAW_TO_MSS;
+
+				gyro_log.x = (double)imu->gyrx * GYRO_RAW_TO_RAD;
+				gyro_log.y = imu->gyry * GYRO_RAW_TO_RAD;
+				gyro_log.z = imu->gyrz * GYRO_RAW_TO_RAD;
+
+				m_obs->skylineAccX = acc_log.x;
+				m_obs->skylineAccY = acc_log.y;
+				m_obs->skylineAccZ = acc_log.z;
+				m_obs->skylineGyroX = gyro_log.x;
+				m_obs->skylineGyroY = gyro_log.y;
+				m_obs->skylineGyroZ = gyro_log.z;
+
 				// m_imuFlag = false;
 				sendIMU();
+				acc_logger.log(&acc_log);
+				gyro_logger.log(&gyro_log);
 				break;
 			case MSP_SET_RAW_RC:
 				sendRC();
@@ -210,6 +224,7 @@ void Skyline::update() {
 // constants
 const unsigned char Skyline::CMD_ARM[18] = {16, 200, 220, 5, 220, 5, 208, 7, 232, 3, 220, 5, 220, 5, 220, 5, 220, 5};
 const unsigned char Skyline::CMD_DISARM[18] = {16, 200, 220, 5, 220, 5, 208, 7, 232, 3, 220, 5, 220, 5, 220, 5, 220, 5};
+const double Skyline::GYRO_RAW_TO_RAD = 0.004261057744004991;
 const double Skyline::ACC_RAW_TO_MSS = 0.019117690177075743;
 const double Skyline::ACC_X_ZERO = 0.3336673346693387;
 const double Skyline::ACC_Y_ZERO = 0.22745490981963928;
