@@ -38,6 +38,10 @@ class File():
             # prepend the time
             dtype =  [("time", c_map["uint64_t"])] + dtype
             self._mappings[p.name] = MapEntry(p.name, dtype, p.id)
+    
+    def keys(self):
+        """keys returns a list of keys that are in the File."""
+        return list(self._mappings)
 
     def __getitem__(self, key) -> np.ndarray:
         """read a variable from the log"""
