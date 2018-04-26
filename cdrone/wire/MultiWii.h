@@ -80,16 +80,17 @@ private:
 typedef struct MSP_RC_struct {
 	uint16_t roll;
 	uint16_t pitch;
+	uint16_t throttle; // XXX: swapped last two
 	uint16_t yaw;
-	uint16_t throttle;
-} MSP_RC_T;
+	uint16_t aux1;
+} __attribute__((packed)) MSP_RC_T;
 
 // MSP_ATTITUDE
 typedef struct MSP_ATTITUDE_struct {
 	int16_t angx; // [-1800, 1800]
 	int16_t angy; // [-900, 900]
 	uint16_t heading; // [-180, 180]
-} MSP_ATTITUDE_T;
+} __attribute__((packed)) MSP_ATTITUDE_T;
 
 // MSP_ANALOG
 typedef struct MSP_ANALOG_struct {
@@ -97,19 +98,19 @@ typedef struct MSP_ANALOG_struct {
 	uint16_t intPowerMeterSum;
 	uint16_t rssi;
 	uint16_t amperage;
-} MSP_ANALOG_T;
+} __attribute__((packed)) MSP_ANALOG_T;
 
 // MSP_RAW_IMU
 typedef struct MSP_IMU_struct {
 	uint16_t accx;
 	uint16_t accy;
 	uint16_t accz;
-	uint16_t gyrx;
-	uint16_t gyry;
-	uint16_t gyrz;
+	int16_t gyrx;
+	int16_t gyry;
+	int16_t gyrz;
 	uint16_t magx;
 	uint16_t magy;
 	uint16_t magz;
-} MSP_IMU_T;
+} __attribute__((packed)) MSP_IMU_T;
 
 #endif /* __MULTI_WII_H__ */

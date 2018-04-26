@@ -58,3 +58,13 @@ cdrone/libs/*
 
 # python caches
 __pycache__
+
+# generated headers
+cdrone/logging/attitude.h
+cdrone/logging/generated.cpp
+cdrone/logging/imu.h
+cdrone/logging/value.h
+cdrone/logging/vector2.h
+cdrone/logging/vector3.h
+cdrone/logging/rc.h
+cdrone/logging/vrpn.h
