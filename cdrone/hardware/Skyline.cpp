@@ -21,9 +21,11 @@ Skyline::~Skyline() {}
 
 void Skyline::start() {
 	sendRC();
-	sendAnalog();
 	sendIMU();
-	sendAttitude();
+	sendIMU();
+	sendIMU();
+	sendIMU();
+	sendAnalog();
 }
 
 void Skyline::setArm() {
@@ -51,24 +53,16 @@ void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 	m_throttle = throttle;
 }
 
-typedef struct RC_struct {
-	uint16_t roll;
-	uint16_t pitch;
-	uint16_t yaw;
-	uint16_t thrust;
-	uint16_t aux1;
-} RC_t;
-
 logging::VariableLogger rc_logger("rc", &logging::rc_variable);
 void Skyline::sendRC() {
-	RC_t rc;
+	MSP_RC_T rc;
 	logging::rc_t rc_log;
 	
 #if defined(__BYTE_ORDER__) &&__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	rc.roll = m_roll;
 	rc.pitch = m_pitch;
 	rc.yaw = m_yaw;
-	rc.thrust = m_throttle;
+	rc.throttle = m_throttle;
 	rc.aux1 = m_armed ? 1800 : 1000; // aux 1
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	#error "Not Yet Implemented"
@@ -79,7 +73,7 @@ void Skyline::sendRC() {
 	rc_log.roll = rc.roll;
 	rc_log.pitch = rc.pitch;
 	rc_log.yaw = rc.yaw;
-	rc_log.thrust = rc.thrust;
+	rc_log.throttle = rc.throttle;
 	rc_log.aux1 = rc.aux1;
 	
 	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 10);
@@ -168,7 +162,7 @@ void Skyline::update() {
 				m_obs->skylineAngYawVel = m_obs->skylineDAngYaw/dt;
 
 				// m_attitudeFlag = false;
-				sendAttitude();
+				// sendAttitude();
 				break;
 			case MSP_ANALOG:
 				analog = (MSP_ANALOG_T *)resp.m_data;
@@ -184,9 +178,9 @@ void Skyline::update() {
 				acc_log.y = (imu->accy-ACC_Y_ZERO)*ACC_RAW_TO_MSS;
 				acc_log.z = (imu->accz-ACC_Z_ZERO)*ACC_RAW_TO_MSS;
 
-				gyro_log.x = (double)imu->gyrx * GYRO_RAW_TO_RAD;
-				gyro_log.y = imu->gyry * GYRO_RAW_TO_RAD;
-				gyro_log.z = imu->gyrz * GYRO_RAW_TO_RAD;
+				gyro_log.x = (double)imu->gyrx;
+				gyro_log.y = imu->gyry;
+				gyro_log.z = imu->gyrz;
 
 				m_obs->skylineAccX = acc_log.x;
 				m_obs->skylineAccY = acc_log.y;
