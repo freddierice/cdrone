@@ -11,6 +11,7 @@
 #include "controller/Watchdog.h"
 #include "hardware/Camera.h"
 #include "hardware/Infrared.h"
+#include "hardware/Servo.h"
 #include "main.h"
 #include "misc/Config.h"
 #include "logging/logging.h"
@@ -20,7 +21,7 @@
 #include "position/VRPN.h"
 
 
-void do_update(Watchdog &watchdog, Infrared &infrared,
+void do_update(Watchdog &watchdog,
 		FlightController &flightController) {
 	
 	console->info("update loop started");
@@ -28,7 +29,7 @@ void do_update(Watchdog &watchdog, Infrared &infrared,
 	while (!global::shutdown) {
 		// add watchdog between each update for higher granularity
 		watchdog.ok();
-		infrared.update();
+		// infrared.update();
 		watchdog.ok();
 		flightController.updateRC();
 		watchdog.ok();
@@ -40,7 +41,7 @@ void do_update(Watchdog &watchdog, Infrared &infrared,
 void do_recv(Watchdog &watchdog, Config &config, 
 		FlightController &flightController,
 		std::shared_ptr<IO> io,
-		std::shared_ptr<Observations> obs, Camera &camera) {
+		std::shared_ptr<Observations> obs, Camera &camera, Servo &servo) {
 	proto::Update update;
 
 	// try to get the first message before starting the watchdog.
@@ -129,6 +130,13 @@ void do_recv(Watchdog &watchdog, Config &config,
 			obs->ioPositionY = position.y();
 			obs->ioPositionZ = position.z();
 		}
+
+		// check for tilt
+		if (update.has_tilt()) {
+			auto tilt = update.tilt().tilt(); // XXX: this nasty
+			console->info("setting tilt: {}", tilt);
+			servo.setValue(tilt);
+		}
 		
 		// get another message
 		try {
@@ -205,7 +213,8 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 void do_serve(Watchdog &watchdog, Config &config,
 		IOController &ioController,
 		FlightController &flightController,
-		std::shared_ptr<Observations> obs, Camera &camera) {
+		std::shared_ptr<Observations> obs, Camera &camera,
+		Servo &servo) {
 	while (!global::shutdown) {
 		watchdog.stop();
 		try {
@@ -213,7 +222,7 @@ void do_serve(Watchdog &watchdog, Config &config,
 			console->info("server accepted");
 			std::thread recv_thr(do_recv, std::ref(watchdog), std::ref(config),
 					std::ref(flightController), io, obs,
-					std::ref(camera));
+					std::ref(camera), std::ref(servo));
 			std::thread send_thr(do_send, io, obs,
 					std::ref(flightController));
 			recv_thr.join();
@@ -234,11 +243,8 @@ void cdrone(Config &config) {
 	Watchdog ioWatchdog(config.ioWatchdog(), "io");
 	Watchdog controllerWatchdog(config.controllerWatchdog(), "controller");
 	std::unique_ptr<VRPN> vrpn;
+	Servo servo(18);
 	
-	if (config.vrpnEnabled())
-		vrpn = std::make_unique<VRPN>(config.vrpnName(), config.vrpnID());
-	
-
 	// check for correct hardware
 	if (std::thread::hardware_concurrency() != 4) {
 		console->error("cpu not supported -- must have 4 hardware cores.");
@@ -248,9 +254,12 @@ void cdrone(Config &config) {
 	// initialize the observations
 	std::shared_ptr<Observations> obs = std::make_shared<Observations>();
 	
+	if (config.vrpnEnabled())
+		vrpn = std::make_unique<VRPN>(config.vrpnName(), config.vrpnID(), obs);
+	
 	// initialize the hardware
-	console->info("initializing Infrared");
-	Infrared infrared(config, obs);
+	// console->info("initializing Infrared");
+	// Infrared infrared(config, obs);
 
 	console->info("initializing FlightController");
 	FlightController flightController(config, obs);
@@ -269,12 +278,13 @@ void cdrone(Config &config) {
 	console->info("creating threads");
 	pthread_block(SIGINT);
 	std::thread update_thr(do_update, std::ref(updateWatchdog), 
-			std::ref(infrared), std::ref(flightController));
+	// 		std::ref(infrared),
+	 		std::ref(flightController));
 	// std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
 	// 		std::ref(config), std::ref(flightController));
 	std::thread serve_thr(do_serve, std::ref(ioWatchdog), std::ref(config),
 			std::ref(ioController), std::ref(flightController), obs,
-			std::ref(camera));
+			std::ref(camera), std::ref(servo));
 	pthread_unblock(SIGINT);
 
 	// move threads to specific cores

@@ -13,7 +13,7 @@ Skyline::Skyline(Config &config, std::shared_ptr<Observations> obs): m_serial(
 		m_calibrateFlag(false), m_attitudeFlag(false), m_imuFlag(false),
 		m_analogFlag(false), m_armed(false), m_lastAttitudeTime(0.0),
 		m_lastAnalog(std::chrono::high_resolution_clock::now()), m_ticks(0),
-		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000) {
+		m_roll(1500), m_pitch(1500), m_yaw(1500), m_throttle(1000), m_tilt(1500) {
 	setIdle();
 	start();
 }
@@ -21,9 +21,6 @@ Skyline::~Skyline() {}
 
 void Skyline::start() {
 	sendRC();
-	sendIMU();
-	sendIMU();
-	sendIMU();
 	sendIMU();
 	sendAnalog();
 }
@@ -45,6 +42,10 @@ void Skyline::setIdle() {
 	setRC(1500, 1500, 1500, 900);
 }
 
+void Skyline::setTilt(uint16_t tilt) {
+	m_tilt = tilt;
+}
+
 void Skyline::setRC(uint16_t roll, uint16_t pitch, uint16_t yaw,
 		uint16_t throttle) {
 	m_roll = roll;
@@ -64,6 +65,7 @@ void Skyline::sendRC() {
 	rc.yaw = m_yaw;
 	rc.throttle = m_throttle;
 	rc.aux1 = m_armed ? 1800 : 1000; // aux 1
+	rc.aux2 = m_tilt;
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	#error "Not Yet Implemented"
 #else
@@ -75,8 +77,9 @@ void Skyline::sendRC() {
 	rc_log.yaw = rc.yaw;
 	rc_log.throttle = rc.throttle;
 	rc_log.aux1 = rc.aux1;
+	rc_log.aux2 = rc.aux2;
 	
-	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 10);
+	m_multiwii.sendCMD(MultiWiiCMD::MSP_SET_RAW_RC, (char *)&rc, 12);
 	rc_logger.log((void *)&rc_log);
 }
 

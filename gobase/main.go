@@ -13,6 +13,9 @@ import (
 // DefaultHeight holds the initial height of the drone in meters.
 const DefaultHeight = 0.35
 
+// TiltStep is the step between tilts.
+const TiltStep = uint32(5)
+
 // VelocityStep holds the step size for the velocity.
 const VelocityStep = 0.2
 
@@ -42,6 +45,8 @@ func refresh(b *base.Base) {
 	printAt(0, 12, "h - hover")
 	printAt(0, 13, "r - reset the image for position mode")
 	printAt(0, 14, "p - toggle position mode")
+	printAt(0, 15, "1 - lower angle of tilt")
+	printAt(0, 16, "2 - increase angle of tilt")
 
 	// increment 40
 	printAt(40, 0, "VALUES")
@@ -91,6 +96,7 @@ func doInput() error {
 		x := float64(0.0)
 		y := float64(0.0)
 		z := float64(DefaultHeight)
+		tilt := uint32(150)
 
 		for {
 			switch ev := termbox.PollEvent(); ev.Type {
@@ -111,6 +117,18 @@ func doInput() error {
 					b.Velocity()
 				} else if ev.Ch == 'r' {
 					b.ResetPosition()
+				} else if ev.Ch == '1' {
+					tilt -= TiltStep
+					if tilt < 80 {
+						tilt = 80
+					}
+					b.SetTilt(tilt)
+				} else if ev.Ch == '2' {
+					tilt += TiltStep
+					if tilt > 240 {
+						tilt = 240
+					}
+					b.SetTilt(tilt)
 				}
 				if b.Drone.Mode == proto.Mode_VELOCITY {
 					if ev.Ch == 'w' {

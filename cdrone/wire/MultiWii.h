@@ -83,6 +83,7 @@ typedef struct MSP_RC_struct {
 	uint16_t throttle; // XXX: swapped last two
 	uint16_t yaw;
 	uint16_t aux1;
+	uint16_t aux2;
 } __attribute__((packed)) MSP_RC_T;
 
 // MSP_ATTITUDE

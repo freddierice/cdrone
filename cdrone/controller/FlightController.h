@@ -56,6 +56,8 @@ public:
 	void updateController();
 	void updateRC();
 	
+	void setTilt(uint16_t tilt);
+	
 	// FUNCTIONS THAT CAN BE RUN BY ANY THREAD //
 	FlightMode getMode();
 

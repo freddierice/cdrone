@@ -10,6 +10,7 @@
 #include "controller/Watchdog.h"
 #include "hardware/Camera.h"
 #include "hardware/Infrared.h"
+#include "hardware/Servo.h"
 #include "hardware/Skyline.h"
 #include "misc/Config.h"
 #include "logging/logging.h"
@@ -183,6 +184,19 @@ void test_skyline(Config &config) {
 					obs->skylineAngYaw);
 		}
 
+	} catch (HardwareException &ex) {
+		console->error("got a hardware exception: {}", ex.what());
+	}
+}
+
+void test_servo(Config &config) {
+	try {
+		Servo servo(1);
+		for (int i = Servo::MIN_VALUE; i <= Servo::MAX_VALUE && !global::shutdown; i += 10) {
+			servo.setValue(i);
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		servo.setValue((Servo::MIN_VALUE + Servo::MAX_VALUE) / 2);
 	} catch (HardwareException &ex) {
 		console->error("got a hardware exception: {}", ex.what());
 	}

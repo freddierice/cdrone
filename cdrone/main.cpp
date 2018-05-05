@@ -67,6 +67,8 @@ int main(int argc, const char *argv[]) try {
 			test_camera(config);
 		} else if (!strcmp(program, "skyline")) {
 			test_skyline(config);
+		} else if (!strcmp(program, "servo")) {
+			test_servo(config);
 		} else {
 			console->error("{} is not a valid program", program);
 			ret = 1;

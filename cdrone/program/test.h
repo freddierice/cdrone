@@ -5,6 +5,7 @@ class Config;
 void test_calibrate(Config &config);
 void test_camera(Config &config);
 void test_infrared(Config &config);
+void test_servo(Config &config);
 void test_skyline(Config &config);
 void test_ssl(Config &config);
 void test_multiwii(Config &config);

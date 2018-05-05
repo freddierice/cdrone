@@ -153,6 +153,17 @@ RUN cd /home/user \
 	&& mv quat/libquat.a *.a /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/ \
 	&& cp -r ../*.h /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/
 
+# USER root
+# RUN apt-get install -y sudo
+RUN cd /home/user \
+	&& git clone git://git.drogon.net/wiringPi \
+	&& cd wiringPi \
+	&& cd wiringPi \
+	&& make CC=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-gcc \
+	&& cp wiringPi.h softServo.h /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/include/ \
+	&& cp *.so* /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib \
+	&& ln -s /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/libwiringPi*.so.* /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/libwiringPi.so
+
 WORKDIR /home/user/cdrone
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["bash", "-c", "make"]

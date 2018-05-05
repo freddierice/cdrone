@@ -40,6 +40,14 @@ func (b *Base) SetVelocity(x, y, z float64) {
 	}
 }
 
+func (b *Base) SetTilt(tilt uint32) {
+	b.messageChan <- &proto.Update{
+		Tilt: &proto.Tilt{
+			Tilt: tilt,
+		},
+	}
+}
+
 // Arm sends an arm command to the drone.
 func (b *Base) Arm() {
 	b.setMode(proto.Mode_ARM)

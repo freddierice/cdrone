@@ -7,6 +7,7 @@ message Raw {
 	uint32 pitch = 2; // valid range [1000, 2000]
 	uint32 yaw = 3; // valid range [1000, 2000]
 	uint32 throttle = 4; // valid range [1000, 2000]
+	uint32 tilt = 5; // valid range [1000, 2000]
 }
 
 message Velocity {
@@ -20,6 +21,10 @@ message Position {
 	double x = 1; // unbounded
 	double y = 2; // unbounded
 	double z = 3; // valid range [0, 0.6]
+}
+
+message Tilt {
+	uint32 tilt = 1; // valid range [1000, 2000]
 }
 	
 enum Mode {
@@ -41,7 +46,7 @@ enum Command {
 }
 
 message Update {
-	// Raw is a passthrough straght to the flight controller.
+	// Raw is a passthrough straight to the flight controller.
 	Raw raw = 1;
 
 	// Velocity sets the velocity in any direction.
@@ -55,6 +60,9 @@ message Update {
 
 	// Command tells the drone to do some asynchronous task.
 	Command command = 5;
+
+	// Tilt tells the drone to tilt.
+	Tilt tilt = 6;
 }
 
 message Observations {

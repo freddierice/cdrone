@@ -1,7 +1,7 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++14 -O2 # -g -Og # -O2
-LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lopencv_core -lopencv_video -lopencv_imgcodecs -larchive -Wl,-rpath=/opt/vc/lib -L/opt/vc/lib -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lvrpn -lquat
+CXX_FLAGS:=-Wall -std=c++14 -O2 -I/usr/local/include # -g -Og # -O2
+LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lopencv_core -lopencv_video -lopencv_imgcodecs -larchive -Wl,-rpath=/opt/vc/lib -L/opt/vc/lib -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lvrpn -lquat -lwiringPi
 TARGET:=cdrone
 
 .PHONY: docker pkg
@@ -30,11 +30,14 @@ proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
 
+%.o: %.c
+	$(CXX) $(CXX_FLAGS) -I. -c $^ -o $@
+
 proto:
 	@mkdir proto
 
 docker:
-	@docker run -it --rm -v $(shell pwd):/home/user/cdrone -v $(shell pwd)/../proto:/home/user/proto freddierice/cdrone
+	@docker run -it --rm -v $(shell pwd):/home/user/cdrone -v $(shell pwd)/../proto:/home/user/proto freddierice/cdrone:tilt
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)

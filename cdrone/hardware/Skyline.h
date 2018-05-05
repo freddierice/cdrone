@@ -32,6 +32,9 @@ public:
 
 	// setRC sets the rc values to get sent to the skyline.
 	void setRC(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t throttle);
+	
+	// setTilt
+	void setTilt(uint16_t tilt);
 
 	// sendCalibrate sends a single calibrate command to the skyline.
 	void sendCalibrate();
@@ -92,6 +95,7 @@ private:
 	std::atomic<uint16_t> m_pitch;
 	std::atomic<uint16_t> m_yaw;
 	std::atomic<uint16_t> m_throttle;
+	std::atomic<uint16_t> m_tilt;
 };
 
 #endif /* __SKYLINE_H__ */

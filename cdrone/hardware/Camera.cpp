@@ -358,7 +358,7 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 		motion_logger.log(&motion2);
 
 		x_motion /= camera->m_blocks;
-		y_motion /= -camera->m_blocks;
+		y_motion /= camera->m_blocks;
 		x_motion *= 0.055;
 		y_motion *= 0.05;
 		// normalize the motion and use lazy motion blur

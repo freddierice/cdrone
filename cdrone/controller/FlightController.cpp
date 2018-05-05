@@ -26,6 +26,7 @@ void FlightController::arm() {
 		m_skyline.setArm();
 		setMode(Armed);
 		m_skyline.setIdle();
+		m_throttlePID.reset();
 	}
 }
 
@@ -75,6 +76,10 @@ void FlightController::calibrate() {
 
 void FlightController::updateRC() {
 	m_skyline.update();
+}
+
+void FlightController::setTilt(uint16_t tilt) {
+	m_skyline.setTilt(tilt);
 }
 
 void FlightController::updateController() {
