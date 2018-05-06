@@ -13,7 +13,10 @@ FlightController::FlightController(Config &config,
 	config.pitchPIDI(), config.pitchPIDD(), 1500, 1300, 1700),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
 			config.throttlePIDD(), config.throttlePIDK(), 1100, 1900),
-	m_posXPID(-0.04, -0.001, 0, 0, -0.20, 0.20), m_posYPID(-0.04, -0.001, 0, 0, -0.20, 0.20) {
+	m_posXPID(config.positionXPIDP(), config.positionXPIDI(),
+			config.positionXPIDD(), 0.0, -0.20, 0.20),
+	m_posYPID(config.positionYPIDP(), config.positionYPIDI(),
+			config.positionYPIDD(), 0, -0.20, 0.20) {
 }
 
 FlightMode FlightController::getMode() {
@@ -83,7 +86,7 @@ void FlightController::updateRC() {
 
 void FlightController::updateController() {
 	uint16_t roll, pitch, throttle;
-	double estimateX, estimateY, estimateZ, estimateYaw;
+	double estimateX, estimateY, estimateZ; // estimateYaw;
 	double vx, vy;
 	std::chrono::high_resolution_clock::time_point then, now;
 	FlightMode mode;
@@ -120,8 +123,7 @@ void FlightController::updateController() {
 					m_obs->ioRawYaw, m_obs->ioRawThrottle);
 			break;
 		case FlightMode::VelocityControl:
-			estimateZ = m_obs->initialPositionZ + m_obs->ioPositionZ;
-			estimateZ -= m_obs->positionZ;
+			estimateZ = m_obs->positionZ - m_obs->initialPositionZ - m_obs->ioPositionZ;
 			roll = (uint16_t)m_rollPID.step(m_obs->velocityX - m_obs->ioVelocityX);
 			pitch = (uint16_t)m_pitchPID.step(m_obs->velocityY - m_obs->ioVelocityY);
 			throttle = (uint16_t)m_throttlePID.step(estimateZ);
@@ -129,13 +131,9 @@ void FlightController::updateController() {
 			break;
 		case FlightMode::PositionControl:
 			
-			estimateX = m_obs->initialPositionX + m_obs->ioPositionX;
-			estimateY = m_obs->initialPositionY + m_obs->ioPositionY;
-			estimateZ = m_obs->initialPositionZ + m_obs->ioPositionZ;
-
-			estimateX -= m_obs->positionX;
-			estimateY -= m_obs->positionY;
-			estimateZ -= m_obs->positionZ;
+			estimateX = m_obs->positionX - m_obs->initialPositionX - m_obs->ioPositionX;
+			estimateY = m_obs->positionY - m_obs->initialPositionY - m_obs->ioPositionY;
+			estimateZ = m_obs->positionZ - m_obs->initialPositionZ - m_obs->ioPositionZ;
 
 			// use pos pid to get velocity targets.
 			vx = m_posXPID.step(estimateX);

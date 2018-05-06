@@ -60,11 +60,15 @@ message Update {
 message Observations {
 	Mode mode = 1;
 	double battery = 2;
-	double camera_velocity_x = 3;
-	double camera_velocity_y = 4;
-	double camera_position_x = 5;
-	double camera_position_y = 6;
-	double infrared_height = 7;
+	double velocity_x = 3;
+	double velocity_y = 4;
+	double position_x = 5;
+	double position_y = 6;
+	double position_z = 7;
 	double skyline_ang_roll_vel = 8;
 	double skyline_ang_pitch_vel = 9;
+	double throttle = 10;
+	double roll = 11;
+	double pitch = 12;
+	double yaw = 13;
 }

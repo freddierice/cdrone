@@ -154,11 +154,11 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 	while (!global::shutdown) {
 		protoObs.Clear();
 		protoObs.set_battery(obs->skylineBattery);
-		protoObs.set_camera_velocity_x(obs->velocityX);
-		protoObs.set_camera_velocity_y(obs->velocityY);
-		protoObs.set_camera_position_x(obs->positionX);
-		protoObs.set_camera_position_y(obs->positionY);
-		protoObs.set_infrared_height(obs->positionZ);
+		protoObs.set_velocity_x(obs->velocityX);
+		protoObs.set_velocity_y(obs->velocityY);
+		protoObs.set_position_x(obs->positionX);
+		protoObs.set_position_y(obs->positionY);
+		protoObs.set_position_z(obs->positionZ);
 		protoObs.set_skyline_ang_roll_vel(obs->skylineAngRollVel);
 		protoObs.set_skyline_ang_pitch_vel(obs->skylineAngPitchVel);
 		auto mode = flightController.getMode();
