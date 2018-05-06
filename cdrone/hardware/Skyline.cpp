@@ -22,9 +22,6 @@ Skyline::~Skyline() {}
 void Skyline::start() {
 	sendRC();
 	sendIMU();
-	sendIMU();
-	sendIMU();
-	sendIMU();
 	sendAnalog();
 }
 

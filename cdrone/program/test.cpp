@@ -31,8 +31,7 @@ void test_infrared(Config &config) {
 	while (!global::shutdown) {
 		watchdog.ok();
 		infrared.update();
-		console->info("height: {}, voltage: {}", obs->infraredHeight,
-				obs->infraredVoltage);
+		console->info("height: {}", obs->positionZ);
 	}
 }
 
@@ -131,10 +130,10 @@ void test_camera(Config &config) {
 		camera.enablePosition();
 		while (!global::shutdown) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			xMotion= obs->cameraVelocityX;
-			yMotion = obs->cameraVelocityY;
-			xPosition = obs->cameraPositionX;
-			yPosition = obs->cameraPositionY;
+			xMotion= obs->velocityX;
+			yMotion = obs->velocityY;
+			xPosition = obs->positionX;
+			yPosition = obs->positionY;
 
 			console->info("motion: {}, {}", xMotion, yMotion);
 			console->info("position: {}, {}", xPosition, yPosition);

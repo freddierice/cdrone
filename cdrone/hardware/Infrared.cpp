@@ -56,12 +56,11 @@ void Infrared::update() {
 	height_raw_logger.log(&value);
 
 	// do smoothed distance
-	oldDistance = m_obs->infraredHeight;
+	oldDistance = m_obs->positionZ;
 	newDistance = (1-m_alpha)*oldDistance + m_alpha*newDistance;
 
 	// update the atomics
-	m_obs->infraredHeight = newDistance;
-	m_obs->infraredVoltage = newVoltage;
+	m_obs->positionZ = newDistance;
 
 	// log smoothed
 	value.value = newDistance;

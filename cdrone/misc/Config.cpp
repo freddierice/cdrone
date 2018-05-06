@@ -46,6 +46,9 @@ Config::Config(const std::string &filename) {
 		m_vrpnName = m_root.get("vrpnName", "").asString();
 		m_vrpnID = m_root.get("vrpnID", 0).asInt();
 		m_vrpnEnabled = m_root.get("vrpnEnabled", false).asBool();
+		m_maxPositionDeltaX = m_root.get("maxPositionDeltaX", 1.0).asDouble();
+		m_maxPositionDeltaY = m_root.get("maxPositionDeltaY", 1.0).asDouble();
+		m_maxPositionDeltaZ = m_root.get("maxPositionDeltaZ", 1.0).asDouble();
 	} catch(Json::RuntimeError &e) {
 		throw ConfigException(e.what());
 	}

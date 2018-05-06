@@ -378,12 +378,12 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 				*/
 				// tan(camera->m_obs->skylineDAngRoll) * camera->m_obs->infraredHeight, 
 				// tan(camera->m_obs->skylineDAngPitch) * camera->m_obs->infraredHeight);
-		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityX;
-		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->cameraVelocityY;
+		x_motion =  x_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->velocityX;
+		y_motion =  y_motion*ALPHA + (1.0-ALPHA)*camera->m_obs->velocityY;
 
 		// set new motion
-		camera->m_obs->cameraVelocityX = x_motion;
-		camera->m_obs->cameraVelocityY = y_motion;
+		camera->m_obs->velocityX = x_motion;
+		camera->m_obs->velocityY = y_motion;
 	}
 	mmal_buffer_header_release(buffer);
 
@@ -400,9 +400,9 @@ void Camera::callbackEncoder(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 
 void Camera::resetPosition() {
 	m_hasFirstFrame = false;
-	m_obs->cameraPositionX = 0.0;
-	m_obs->cameraPositionY = 0.0;
-	m_obs->cameraPositionYaw = 0.0;
+	m_obs->positionX = 0.0;
+	m_obs->positionY = 0.0;
+	m_obs->yaw = 0.0;
 }
 
 logging::VariableLogger position_logger("camera_position", &logging::vector2_variable);
@@ -445,12 +445,12 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 			pos2_raw.x = x;
 			pos2_raw.y = y;
 			position_raw_logger.log(&pos2);
-			x = -1.0*x * 2.0/240.0 * camera->m_obs->infraredHeight;
-			y = y * 2.0/320.0 * camera->m_obs->infraredHeight;
-			camera->m_obs->cameraPositionX = x*ALPHA + camera->m_obs->cameraPositionX*(1.0-ALPHA);
-			camera->m_obs->cameraPositionY = y*ALPHA + camera->m_obs->cameraPositionY*(1.0-ALPHA);
-			pos2.x = camera->m_obs->cameraPositionX;
-			pos2.y = camera->m_obs->cameraPositionY;
+			x = -1.0*x * 2.0/240.0 * camera->m_obs->positionZ;
+			y = y * 2.0/320.0 * camera->m_obs->positionZ;
+			camera->m_obs->positionX = x*ALPHA + camera->m_obs->positionX*(1.0-ALPHA);
+			camera->m_obs->positionY = y*ALPHA + camera->m_obs->positionY*(1.0-ALPHA);
+			pos2.x = camera->m_obs->positionX;
+			pos2.y = camera->m_obs->positionY;
 			goto done;
 		}
 
@@ -462,14 +462,14 @@ void Camera::callbackRaw(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
 			y = estimate.at<double>(1,2);
 			pos2_raw.x = x;
 			pos2_raw.y = y;
-			x = -1.0*x * 2.0/240.0 * camera->m_obs->infraredHeight;
-			y = y * 2.0/320.0 * camera->m_obs->infraredHeight;
+			x = -1.0*x * 2.0/240.0 * camera->m_obs->positionZ;
+			y = y * 2.0/320.0 * camera->m_obs->positionZ;
 			
 			// add the delta
-			camera->m_obs->cameraPositionX = camera->m_obs->cameraPositionX + x;
-			camera->m_obs->cameraPositionY = camera->m_obs->cameraPositionY + y;
-			pos2.x = camera->m_obs->cameraPositionX;
-			pos2.y = camera->m_obs->cameraPositionY;
+			camera->m_obs->positionX = camera->m_obs->positionX + x;
+			camera->m_obs->positionY = camera->m_obs->positionY + y;
+			pos2.x = camera->m_obs->positionX;
+			pos2.y = camera->m_obs->positionY;
 		}
 
 done:
