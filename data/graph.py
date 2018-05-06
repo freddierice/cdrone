@@ -29,7 +29,7 @@ def main(log_filename: str):
         
         # make plot for roll pitch yaw rc commands
         plt.subplot(511)
-        plt.plot(rc["time"], rc["thrust"])
+        plt.plot(rc["time"], rc["throttle"])
         plt.gca().set_ylim([1350, 1650])
 
         # make plot for roll pitch yaw
