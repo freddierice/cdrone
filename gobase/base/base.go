@@ -29,13 +29,17 @@ type Base struct {
 type Drone struct {
 	Battery            float64
 	Mode               proto.Mode
-	CameraVelocityX    float64
-	CameraVelocityY    float64
-	CameraPositionX    float64
-	CameraPositionY    float64
-	InfraredHeight     float64
+	VelocityX          float64
+	VelocityY          float64
+	PositionX          float64
+	PositionY          float64
+	PositionZ          float64
 	SkylineAngRollVel  float64
 	SkylineAngPitchVel float64
+	Throttle           float64
+	Roll               float64
+	Pitch              float64
+	Yaw                float64
 }
 
 // Config holds configurations for a Base.
@@ -216,13 +220,17 @@ func (base *Base) RecvMessage() {
 	// update values
 	base.Drone.Mode = obs.Mode
 	base.Drone.Battery = obs.Battery
-	base.Drone.CameraVelocityX = obs.CameraVelocityX
-	base.Drone.CameraVelocityY = obs.CameraVelocityY
-	base.Drone.CameraPositionX = obs.CameraPositionX
-	base.Drone.CameraPositionY = obs.CameraPositionY
-	base.Drone.InfraredHeight = obs.InfraredHeight
+	base.Drone.VelocityX = obs.VelocityX
+	base.Drone.VelocityY = obs.VelocityY
+	base.Drone.PositionX = obs.PositionX
+	base.Drone.PositionY = obs.PositionY
+	base.Drone.PositionZ = obs.PositionZ
 	base.Drone.SkylineAngRollVel = obs.SkylineAngRollVel
 	base.Drone.SkylineAngPitchVel = obs.SkylineAngPitchVel
+	base.Drone.Throttle = obs.Throttle
+	base.Drone.Roll = obs.Roll
+	base.Drone.Pitch = obs.Pitch
+	base.Drone.Yaw = obs.Yaw
 }
 
 // Close closes a connection to the drone.

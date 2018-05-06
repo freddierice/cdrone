@@ -37,7 +37,7 @@ proto:
 	@mkdir proto
 
 docker:
-	@docker run -it --rm -v $(shell pwd):/home/user/cdrone -v $(shell pwd)/../proto:/home/user/proto freddierice/cdrone:tilt
+	@docker run -it --rm -v $(shell pwd):/home/user/cdrone -v $(shell pwd)/../proto:/home/user/proto freddierice/cdrone /usr/bin/make -j4
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBS)

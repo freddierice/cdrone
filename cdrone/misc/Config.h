@@ -39,6 +39,14 @@ public:
 	const double& throttlePIDI() const { return m_throttlePIDI; }
 	const double& throttlePIDD() const { return m_throttlePIDD; }
 	const double& throttlePIDK() const { return m_throttlePIDK; }
+	const double& positionXPIDP() const { return m_positionXPIDP; }
+	const double& positionXPIDI() const { return m_positionXPIDI; }
+	const double& positionXPIDD() const { return m_positionXPIDD; }
+	const double& positionXPIDK() const { return m_positionXPIDK; }
+	const double& positionYPIDP() const { return m_positionYPIDP; }
+	const double& positionYPIDI() const { return m_positionYPIDI; }
+	const double& positionYPIDD() const { return m_positionYPIDD; }
+	const double& positionYPIDK() const { return m_positionYPIDK; }
 	const std::string& vrpnName() const { return m_vrpnName; }
 	const uint32_t& vrpnID() const { return m_vrpnID; }
 	const bool& vrpnEnabled() const { return m_vrpnEnabled; }
@@ -72,6 +80,14 @@ private:
 	double m_throttlePIDI;
 	double m_throttlePIDD;
 	double m_throttlePIDK;
+	double m_positionXPIDP;
+	double m_positionXPIDI;
+	double m_positionXPIDD;
+	double m_positionXPIDK;
+	double m_positionYPIDP;
+	double m_positionYPIDI;
+	double m_positionYPIDD;
+	double m_positionYPIDK;
 	std::string m_vrpnName;
 	uint32_t m_vrpnID;
 	bool m_vrpnEnabled;
