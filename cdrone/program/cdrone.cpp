@@ -260,7 +260,7 @@ void cdrone(Config &config) {
 	
 	// initialize the hardware
 	console->info("initializing Infrared");
-	Infrared infrared(config, std::make_shared<Observations>());
+	// Infrared infrared(config, std::make_shared<Observations>());
 
 	console->info("initializing FlightController");
 	FlightController flightController(config, obs);

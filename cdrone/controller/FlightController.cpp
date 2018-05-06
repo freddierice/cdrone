@@ -12,7 +12,7 @@ FlightController::FlightController(Config &config,
 	config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
 	config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
-			config.throttlePIDD(), config.throttlePIDK(), 1100, 1900), 
+			config.throttlePIDD(), config.throttlePIDK(), 1100, 1900),
 	m_posXPID(-0.04, -0.001, 0, 0, -0.20, 0.20), m_posYPID(-0.04, -0.001, 0, 0, -0.20, 0.20) {
 }
 
