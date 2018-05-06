@@ -33,10 +33,12 @@ void VRPN_CALLBACK VRPN::callback(void *userdata, const vrpn_TRACKERCB t) {
 	vrpn.quat0 = t.quat[0]; vrpn.quat1 = t.quat[1];
 	vrpn.quat2 = t.quat[2]; vrpn.quat3 = t.quat[3];
 
-	vrpn_obj->m_lastTime = vrpn.sensor_time;
+	vrpn_obj->m_obs->velocityX = (vrpn.x - vrpn_obj->m_obs->positionX) / (vrpn.sensor_time - vrpn_obj->m_lastTime);
+	vrpn_obj->m_obs->velocityY = (vrpn.y - vrpn_obj->m_obs->positionY) / (vrpn.sensor_time - vrpn_obj->m_lastTime);
 	vrpn_obj->m_obs->positionX = vrpn.x;
 	vrpn_obj->m_obs->positionY = vrpn.z;
 	vrpn_obj->m_obs->positionZ = vrpn.y;
+	vrpn_obj->m_lastTime = vrpn.sensor_time;
 	
 	// log it
 	vrpn_obj->m_logger.log(&vrpn);

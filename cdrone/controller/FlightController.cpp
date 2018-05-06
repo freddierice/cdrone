@@ -9,10 +9,10 @@ FlightController::FlightController(Config &config,
 	m_lastModeChange(std::chrono::high_resolution_clock::now()),
 	m_lastSendRC(std::chrono::high_resolution_clock::now()),
 	m_skyline(config, obs), m_rollPID(config.rollPIDP(), config.rollPIDI(),
-	config.rollPIDD(), 1500, 1400, 1600), m_pitchPID(config.pitchPIDP(),
-	config.pitchPIDI(), config.pitchPIDD(), 1500, 1400, 1600),
+	config.rollPIDD(), 1500, 1300, 1700), m_pitchPID(config.pitchPIDP(),
+	config.pitchPIDI(), config.pitchPIDD(), 1500, 1300, 1700),
 	m_throttlePID(config.throttlePIDP(), config.throttlePIDI(),
-			config.throttlePIDD(), config.throttlePIDK(), 1100, 1900), 
+			config.throttlePIDD(), config.throttlePIDK(), 1100, 1900),
 	m_posXPID(-0.04, -0.001, 0, 0, -0.20, 0.20), m_posYPID(-0.04, -0.001, 0, 0, -0.20, 0.20) {
 }
 
