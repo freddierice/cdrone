@@ -162,11 +162,11 @@ void do_send(std::shared_ptr<IO> io, std::shared_ptr<Observations> obs,
 	while (!global::shutdown) {
 		protoObs.Clear();
 		protoObs.set_battery(obs->skylineBattery);
-		protoObs.set_camera_velocity_x(obs->cameraVelocityX);
-		protoObs.set_camera_velocity_y(obs->cameraVelocityY);
-		protoObs.set_camera_position_x(obs->cameraPositionX);
-		protoObs.set_camera_position_y(obs->cameraPositionY);
-		protoObs.set_infrared_height(obs->infraredHeight);
+		protoObs.set_camera_velocity_x(obs->velocityX);
+		protoObs.set_camera_velocity_y(obs->velocityY);
+		protoObs.set_camera_position_x(obs->positionX);
+		protoObs.set_camera_position_y(obs->positionY);
+		protoObs.set_infrared_height(obs->positionZ);
 		protoObs.set_skyline_ang_roll_vel(obs->skylineAngRollVel);
 		protoObs.set_skyline_ang_pitch_vel(obs->skylineAngPitchVel);
 		auto mode = flightController.getMode();
@@ -254,12 +254,13 @@ void cdrone(Config &config) {
 	// initialize the observations
 	std::shared_ptr<Observations> obs = std::make_shared<Observations>();
 	
+	// initialize vrpn if enabled
 	if (config.vrpnEnabled())
 		vrpn = std::make_unique<VRPN>(config.vrpnName(), config.vrpnID(), obs);
 	
 	// initialize the hardware
-	// console->info("initializing Infrared");
-	// Infrared infrared(config, obs);
+	console->info("initializing Infrared");
+	Infrared infrared(config, std::make_shared<Observations>());
 
 	console->info("initializing FlightController");
 	FlightController flightController(config, obs);
@@ -268,7 +269,7 @@ void cdrone(Config &config) {
 	IOController ioController(config);
 
 	console->info("initializing Camera");
-	Camera camera(config, obs);
+	Camera camera(config, std::make_shared<Observations>());
 
 	// start camera
 	console->info("starting Camera");

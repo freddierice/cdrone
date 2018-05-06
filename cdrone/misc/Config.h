@@ -29,19 +29,22 @@ public:
 	const bool ssl() const { return m_ssl; }
 	const std::string& skylinePort() const { return m_skylinePort; }
 	const int& cameraPort() const { return m_cameraPort; }
-	const double& rollPIDP() const {return m_rollPIDP; }
-	const double& rollPIDI() const {return m_rollPIDI; }
-	const double& rollPIDD() const {return m_rollPIDD; }
-	const double& pitchPIDP() const {return m_pitchPIDP; }
-	const double& pitchPIDI() const {return m_pitchPIDI; }
-	const double& pitchPIDD() const {return m_pitchPIDD; }
-	const double& throttlePIDP() const {return m_throttlePIDP; }
-	const double& throttlePIDI() const {return m_throttlePIDI; }
-	const double& throttlePIDD() const {return m_throttlePIDD; }
-	const double& throttlePIDK() const {return m_throttlePIDK; }
-	const std::string& vrpnName() const {return m_vrpnName; }
-	const uint32_t& vrpnID() const {return m_vrpnID; }
-	const bool& vrpnEnabled() const {return m_vrpnEnabled; }
+	const double& rollPIDP() const { return m_rollPIDP; }
+	const double& rollPIDI() const { return m_rollPIDI; }
+	const double& rollPIDD() const { return m_rollPIDD; }
+	const double& pitchPIDP() const { return m_pitchPIDP; }
+	const double& pitchPIDI() const { return m_pitchPIDI; }
+	const double& pitchPIDD() const { return m_pitchPIDD; }
+	const double& throttlePIDP() const { return m_throttlePIDP; }
+	const double& throttlePIDI() const { return m_throttlePIDI; }
+	const double& throttlePIDD() const { return m_throttlePIDD; }
+	const double& throttlePIDK() const { return m_throttlePIDK; }
+	const std::string& vrpnName() const { return m_vrpnName; }
+	const uint32_t& vrpnID() const { return m_vrpnID; }
+	const bool& vrpnEnabled() const { return m_vrpnEnabled; }
+	const double& maxPositionDeltaX() const { return m_maxPositionDeltaX; }
+	const double& maxPositionDeltaY() const { return m_maxPositionDeltaY; }
+	const double& maxPositionDeltaZ() const { return m_maxPositionDeltaZ; }
 private:
 	Json::Value m_root;
 	
@@ -72,6 +75,9 @@ private:
 	std::string m_vrpnName;
 	uint32_t m_vrpnID;
 	bool m_vrpnEnabled;
+	double m_maxPositionDeltaX;
+	double m_maxPositionDeltaY;
+	double m_maxPositionDeltaZ;
 };
 
 #endif /* __CONFIG_H__ */

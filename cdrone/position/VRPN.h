@@ -22,6 +22,7 @@ private:
 	logging::VariableLogger m_logger;
 	vrpn_Tracker_Remote m_remote;
 	std::shared_ptr<Observations> m_obs;
+	uint64_t m_lastTime;
 	std::thread m_thread;
 };
 
