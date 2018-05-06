@@ -51,8 +51,9 @@ func refresh(b *base.Base) {
 	printAt(40, 4, fmt.Sprintf("CameraVelocityY: %v", b.Drone.CameraVelocityY))
 	printAt(40, 5, fmt.Sprintf("CameraPositionX: %v", b.Drone.CameraPositionX))
 	printAt(40, 6, fmt.Sprintf("CameraPositionY: %v", b.Drone.CameraPositionY))
-	printAt(40, 7, fmt.Sprintf("AngRollVel: %v", b.Drone.SkylineAngRollVel))
-	printAt(40, 8, fmt.Sprintf("AngPitchVel: %v", b.Drone.SkylineAngPitchVel))
+	printAt(40, 7, fmt.Sprintf("CameraPositionZ: %v", b.Drone.InfraredHeight))
+	printAt(40, 8, fmt.Sprintf("AngRollVel: %v", b.Drone.SkylineAngRollVel))
+	printAt(40, 9, fmt.Sprintf("AngPitchVel: %v", b.Drone.SkylineAngPitchVel))
 
 	termbox.Flush()
 }
