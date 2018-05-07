@@ -11,7 +11,7 @@ import (
 )
 
 // DefaultHeight holds the initial height of the drone in meters.
-const DefaultHeight = 0.35
+const DefaultHeight = 0.31
 
 // TiltStep is the step between tilts.
 const TiltStep = uint32(5)

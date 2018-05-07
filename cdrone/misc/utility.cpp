@@ -30,7 +30,7 @@ void pthread_unblock(int sig) {
 double get_time() {
 	struct timespec ts; 
 	::clock_gettime(CLOCK_REALTIME, &ts);
-	return (double)ts.tv_sec + ((double)ts.tv_nsec)/1000000000;
+	return (double)ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0;
 }
 
 int writeFull(int fd, const char *buffer, int len) {

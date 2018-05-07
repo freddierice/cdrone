@@ -10,8 +10,8 @@
 #include "controller/IOController.h"
 #include "controller/Watchdog.h"
 #include "hardware/Camera.h"
-#include "hardware/Infrared.h"
 #include "hardware/Servo.h"
+// #include "hardware/Infrared.h"
 #include "main.h"
 #include "misc/Config.h"
 #include "logging/logging.h"
@@ -21,7 +21,7 @@
 #include "position/VRPN.h"
 
 
-void do_update(Watchdog &watchdog,
+void do_update(Watchdog &watchdog, /*Infrared &infrared,*/
 		FlightController &flightController) {
 	
 	console->info("update loop started");
@@ -30,7 +30,7 @@ void do_update(Watchdog &watchdog,
 		// add watchdog between each update for higher granularity
 		watchdog.ok();
 		// infrared.update();
-		watchdog.ok();
+		// watchdog.ok();
 		flightController.updateRC();
 		watchdog.ok();
 		flightController.updateController();
@@ -259,7 +259,7 @@ void cdrone(Config &config) {
 		vrpn = std::make_unique<VRPN>(config.vrpnName(), config.vrpnID(), obs);
 	
 	// initialize the hardware
-	console->info("initializing Infrared");
+	// console->info("initializing Infrared");
 	// Infrared infrared(config, std::make_shared<Observations>());
 
 	console->info("initializing FlightController");
@@ -279,8 +279,7 @@ void cdrone(Config &config) {
 	console->info("creating threads");
 	pthread_block(SIGINT);
 	std::thread update_thr(do_update, std::ref(updateWatchdog), 
-	// 		std::ref(infrared),
-	 		std::ref(flightController));
+			/*std::ref(infrared),*/ std::ref(flightController));
 	// std::thread controller_thr(do_controller, std::ref(controllerWatchdog), 
 	// 		std::ref(config), std::ref(flightController));
 	std::thread serve_thr(do_serve, std::ref(ioWatchdog), std::ref(config),

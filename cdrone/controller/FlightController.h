@@ -78,12 +78,17 @@ private:
 	
 	FlightController();
 	void setMode(FlightMode m);
+	
+	// resetPIDs resets the pid controllers
+	void resetPIDs();
+
 
 	PID m_rollPID;
 	PID m_pitchPID;
 	PID m_throttlePID;
 	PID m_posXPID;
 	PID m_posYPID;
+	PID m_posZPID;
 	PID m_yawPID;
 };
 

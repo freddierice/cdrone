@@ -10,29 +10,23 @@ MOTION_REDUCE = 10500 / 2650
 def main(log_filename: str):
     """main."""
     with logz.open(log_filename) as l:
-        motion = l["camera_motion"].copy()
-        motion_kf = l["camera_motion"].copy()
 
-        motion_kf['x'][:] = kalman(motion['x'], 0.0001, 0.1)[:]
-
+        position = l['position']
         vrpn = l['vrpn']
-        vrpn['x']
-        vrpn_dx = logz.dt(vrpn, 'x')
-        vrpn_dz = logz.dt(vrpn, 'z')
 
         # plot for the angles
-        plt.subplot(411)
+        plt.subplot(311)
+        plt.plot(position['time'], position['x'])
         plt.plot(vrpn['time'], vrpn['x'])
 
-        plt.subplot(412)
+        plt.subplot(312)
+        plt.plot(position['time'], position['y'])
         plt.plot(vrpn['time'], vrpn['z'])
+
+        plt.subplot(313)
+        plt.plot(position['time'], position['z'])
+        plt.plot(vrpn['time'], vrpn['y'])
         
-        plt.subplot(413)
-        plt.plot(motion['time'], motion['x'])
-
-        plt.subplot(414)
-        plt.plot(motion['time'], motion['y'])
-
         plt.show()
 
 if __name__ == '__main__':

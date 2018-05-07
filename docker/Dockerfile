@@ -164,6 +164,18 @@ RUN cd /home/user \
 	&& cp *.so* /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib \
 	&& ln -s /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/libwiringPi*.so.* /home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr/lib/libwiringPi.so
 
+USER root
+RUN yes | apt-get install mercurial
+
+USER user
+RUN cd /home/user \
+	&& hg clone https://bitbucket.org/eigen/eigen/ \
+	&& cd eigen \
+	&& mkdir build \
+	&& cd build \
+	&& CC=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-gcc CXX=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-g++ cmake -DCMAKE_INSTALL_PREFIX=/home/user/x-tools/armv8-rpi3-linux-gnueabihf/armv8-rpi3-linux-gnueabihf/sysroot/usr ../ \
+	&& make install
+
 WORKDIR /home/user/cdrone
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["bash", "-c", "make"]

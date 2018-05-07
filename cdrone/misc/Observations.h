@@ -2,6 +2,8 @@
 #define __OBSERVATIONS_H__
 
 #include <atomic>
+#include <memory>
+#include <eigen3/Eigen/Geometry>
 
 // Observations holds observations made by different pieces of hardware. Each of
 // the components should only be written to by a certain piece of hardware, but
@@ -9,7 +11,8 @@
 // object should be made as a shared_ptr and distributed amongst the objects.
 class Observations {
 public:
-	Observations() : velocityX(0.0), velocityY(0.0), velocityZ(0.0),
+	Observations() : quat0(1.0), quat1(0.0), quat2(0.0), quat3(0.0),
+	initialHeading(), velocityX(0.0), velocityY(0.0), velocityZ(0.0),
 	velocityYaw(0.0), positionX(0.0), positionY(0.0), positionZ(0.0),
 	yaw(0.0), initialPositionX(0.0), initialPositionY(0.0),
 	initialPositionZ(0.0), initialYaw(0.0), skylineBattery(0.0),
@@ -21,6 +24,8 @@ public:
 	ioRawPitch(1500), ioRawYaw(1500), ioRawThrottle(1000), ioVelocityX(0.0),
 	ioVelocityY(0.0), ioPositionX(0.0), ioPositionY(0.0), ioPositionZ(0.35) {}
 
+	std::atomic<double> quat0, quat1, quat2, quat3;
+	std::shared_ptr<Eigen::Quaterniond> initialHeading;
 	std::atomic<double> velocityX;
 	std::atomic<double> velocityY;
 	std::atomic<double> velocityZ;
