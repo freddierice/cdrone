@@ -11,7 +11,7 @@ import (
 )
 
 // DefaultHeight holds the initial height of the drone in meters.
-const DefaultHeight = 0.35
+const DefaultHeight = 0.31
 
 // VelocityStep holds the step size for the velocity.
 const VelocityStep = 0.2

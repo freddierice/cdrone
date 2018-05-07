@@ -47,10 +47,17 @@ Config::Config(const std::string &filename) {
 		m_positionXPIDI = m_root.get("positionXPIDI", 0.0).asDouble();
 		m_positionXPIDD = m_root.get("positionXPIDD", 0.0).asDouble();
 		m_positionXPIDK = m_root.get("positionXPIDK", 0.0).asDouble();
+		m_positionXPIDCenter = m_root.get("positionXPIDCenter", 1500.0).asDouble();
 		m_positionYPIDP = m_root.get("positionYPIDP", 0.0).asDouble();
 		m_positionYPIDI = m_root.get("positionYPIDI", 0.0).asDouble();
 		m_positionYPIDD = m_root.get("positionYPIDD", 0.0).asDouble();
 		m_positionYPIDK = m_root.get("positionYPIDK", 0.0).asDouble();
+		m_positionYPIDCenter = m_root.get("positionYPIDCenter", 1500.0).asDouble();
+		m_positionZPIDP = m_root.get("positionZPIDP", 0.0).asDouble();
+		m_positionZPIDI = m_root.get("positionZPIDI", 0.0).asDouble();
+		m_positionZPIDD = m_root.get("positionZPIDD", 0.0).asDouble();
+		m_positionZPIDK = m_root.get("positionZPIDK", 0.0).asDouble();
+		m_positionZPIDCenter = m_root.get("positionZPIDCenter", 1500.0).asDouble();
 		m_vrpnName = m_root.get("vrpnName", "").asString();
 		m_vrpnID = m_root.get("vrpnID", 0).asInt();
 		m_vrpnEnabled = m_root.get("vrpnEnabled", false).asBool();

@@ -43,10 +43,17 @@ public:
 	const double& positionXPIDI() const { return m_positionXPIDI; }
 	const double& positionXPIDD() const { return m_positionXPIDD; }
 	const double& positionXPIDK() const { return m_positionXPIDK; }
+	const double& positionXPIDCenter() const { return m_positionXPIDCenter; }
 	const double& positionYPIDP() const { return m_positionYPIDP; }
 	const double& positionYPIDI() const { return m_positionYPIDI; }
 	const double& positionYPIDD() const { return m_positionYPIDD; }
 	const double& positionYPIDK() const { return m_positionYPIDK; }
+	const double& positionYPIDCenter() const { return m_positionYPIDCenter; }
+	const double& positionZPIDP() const { return m_positionZPIDP; }
+	const double& positionZPIDI() const { return m_positionZPIDI; }
+	const double& positionZPIDD() const { return m_positionZPIDD; }
+	const double& positionZPIDK() const { return m_positionZPIDK; }
+	const double& positionZPIDCenter() const { return m_positionZPIDCenter; }
 	const std::string& vrpnName() const { return m_vrpnName; }
 	const uint32_t& vrpnID() const { return m_vrpnID; }
 	const bool& vrpnEnabled() const { return m_vrpnEnabled; }
@@ -84,10 +91,17 @@ private:
 	double m_positionXPIDI;
 	double m_positionXPIDD;
 	double m_positionXPIDK;
+	double m_positionXPIDCenter;
 	double m_positionYPIDP;
 	double m_positionYPIDI;
 	double m_positionYPIDD;
 	double m_positionYPIDK;
+	double m_positionYPIDCenter;
+	double m_positionZPIDP;
+	double m_positionZPIDI;
+	double m_positionZPIDD;
+	double m_positionZPIDK;
+	double m_positionZPIDCenter;
 	std::string m_vrpnName;
 	uint32_t m_vrpnID;
 	bool m_vrpnEnabled;
