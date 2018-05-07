@@ -1,6 +1,6 @@
 PREFIX:=armv8-rpi3-linux-gnueabihf-
 CXX:=$(PREFIX)g++
-CXX_FLAGS:=-Wall -std=c++14 -O2 # -g -Og # -O2
+CXX_FLAGS:=-Wall -std=c++17 -O2 # -g -Og # -O2
 LIBS:=-lpthread -lssl -lcrypto -lprotobuf -lopencv_core -lopencv_video -lopencv_imgcodecs -larchive -Wl,-rpath=/opt/vc/lib -L/opt/vc/lib -lbcm_host -lmmal -lmmal_core -lmmal_components -lmmal_util -lvrpn -lquat
 TARGET:=cdrone
 
@@ -18,7 +18,7 @@ OBJS=$(patsubst %.cpp,%.o,$(wildcard */*.cpp)) $(patsubst %.cc,%.o,$(wildcard */
 logging/generator/generator:
 	@make -C logging/generator
 
-logging/generated.cpp:
+logging/generated.cpp: ./logging/generator/generator ./logging/generator/generator.conf
 	@./logging/generator/generator ./logging/generator/generator.conf ./logging
 
 proto/%.pb.cc proto/%.pb.h: ../proto/%.proto
