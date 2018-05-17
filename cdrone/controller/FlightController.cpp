@@ -20,7 +20,7 @@ FlightController::FlightController(Config &config,
 	m_posYPID(config.positionYPIDP(), config.positionYPIDI(),
 			config.positionYPIDD(), config.positionXPIDCenter(), -0.2, 0.2, 400),
 	m_posZPID(config.positionZPIDP(), config.positionZPIDI(),
-			config.positionZPIDD(), config.positionZPIDCenter(), -0.1, 0.1, 400) {
+			config.positionZPIDD(), config.positionZPIDCenter(), -0.2, 0.2, 400) {
 }
 
 FlightMode FlightController::getMode() {
@@ -59,6 +59,7 @@ void FlightController::rawControl() {
 void FlightController::velocityControl() {
 	auto mode = getMode();
 	if (mode == RawControl || mode == PositionControl || mode == TakeOff) {
+		m_obs->initialPositionZ = static_cast<double>(m_obs->positionZ);
 		resetPIDs();
 		setMode(VelocityControl);
 	}
@@ -104,18 +105,19 @@ void FlightController::setTilt(uint16_t tilt) {
 
 logging::VariableLogger pos_logger("position", &logging::vector3_variable);
 static inline void position(double &estimateX, double &estimateY, double &estimateZ, 
+		double &targetX, double &targetY, double &targetZ,
 		std::shared_ptr<Observations> obs) {
 	logging::vector3_t pos_log;
 
-	estimateX = obs->positionX - obs->initialPositionX;
-	estimateY = obs->positionY - obs->initialPositionY;
-	estimateZ = obs->positionZ - obs->initialPositionZ;
-	Eigen::Vector3d positionDiff(estimateX, estimateZ, estimateY);
+	estimateX = (obs->positionX - obs->initialPositionX) - targetX;
+	estimateY = (obs->positionY - obs->initialPositionY) - targetY;
+	estimateZ = (obs->positionZ - obs->initialPositionZ) - targetZ;
+	Eigen::Vector3d positionDiff(estimateX, estimateY, estimateZ);
 	Eigen::Quaterniond quatDrone(obs->quat0, obs->quat1, obs->quat2, obs->quat3);
 	positionDiff = quatDrone.toRotationMatrix() * positionDiff;
 	estimateX = positionDiff[0];
-	estimateY = positionDiff[2];
-	estimateZ = positionDiff[1];
+	estimateY = positionDiff[1];
+	estimateZ = positionDiff[2];
 
 	pos_log.x = estimateX;
 	pos_log.y = estimateY;
@@ -124,17 +126,18 @@ static inline void position(double &estimateX, double &estimateY, double &estima
 }
 
 static inline void velocity(double &estimateX, double &estimateY, double &estimateZ, 
+		double &targetX, double &targetY, double &targetZ,
 		std::shared_ptr<Observations> obs) {
 
-	estimateX = obs->velocityX;
-	estimateY = obs->velocityY;
-	estimateZ = obs->velocityZ;
-	Eigen::Vector3d velocityDiff(estimateX, estimateZ, estimateY);
+	estimateX = obs->velocityX - targetX;
+	estimateY = obs->velocityY - targetY;
+	estimateZ = obs->velocityZ - targetZ;
+	Eigen::Vector3d velocityDiff(estimateX, estimateY, estimateZ);
 	Eigen::Quaterniond quatDrone(obs->quat0, obs->quat1, obs->quat2, obs->quat3);
 	velocityDiff = quatDrone.toRotationMatrix() * velocityDiff;
 	estimateX = velocityDiff[0];
-	estimateY = velocityDiff[2];
-	estimateZ = velocityDiff[1];
+	estimateY = velocityDiff[1];
+	estimateZ = velocityDiff[2];
 
 	// pos_log.x = estimateX;
 	// pos_log.y = estimateY;
@@ -147,6 +150,7 @@ void FlightController::updateController() {
 	double velocityX, velocityY, velocityZ;
 	double velocityTargetX, velocityTargetY, velocityTargetZ;
 	double positionX, positionY, positionZ;
+	double positionTargetX, positionTargetY, positionTargetZ;
 	std::chrono::high_resolution_clock::time_point then, now;
 	FlightMode mode;
 
@@ -184,26 +188,41 @@ void FlightController::updateController() {
 			break;
 		case FlightMode::VelocityControl:
 
-			velocity(velocityX, velocityY, velocityZ, m_obs);
-			position(positionX, positionY, positionZ, m_obs);
-			
-			velocityTargetZ = m_posZPID.step(positionZ);
+			positionTargetX = 0;
+			positionTargetY = 0;
+			positionTargetZ = m_obs->ioPositionZ;
+			position(positionX, positionY, positionZ, positionTargetX, 
+					positionTargetY, positionTargetZ, m_obs);
 
-			roll = (uint16_t)m_rollPID.step(m_obs->velocityX - m_obs->ioVelocityX);
-			pitch = (uint16_t)m_pitchPID.step(velocityY - m_obs->ioVelocityY);
-			throttle = (uint16_t)m_throttlePID.step(velocityZ - velocityTargetZ);
+			
+			velocityTargetZ = m_posZPID.step(positionZ - m_obs->ioPositionZ);
+			
+			velocityTargetX = m_obs->ioVelocityX;
+			velocityTargetY = m_obs->ioVelocityY;
+			velocity(velocityX, velocityY, velocityZ, velocityTargetX, velocityTargetY,
+					velocityTargetZ, m_obs);
+
+			roll = (uint16_t)m_rollPID.step(velocityX);
+			pitch = (uint16_t)m_pitchPID.step(velocityY);
+			throttle = (uint16_t)m_throttlePID.step(velocityZ);
 
 			m_skyline.setRC(roll, pitch, 1500, throttle);
 			break;
 		case FlightMode::PositionControl:
 
-			velocity(velocityX, velocityY, velocityZ, m_obs);
-			position(positionX, positionY, positionZ, m_obs);
-
+			positionTargetX =  m_obs->ioPositionX;
+			positionTargetY =  m_obs->ioPositionY;
+			positionTargetZ =  m_obs->ioPositionZ;
+			position(positionX, positionY, positionZ, positionTargetX, 
+					positionTargetY, positionTargetZ, m_obs);
+			
 			// use pos pid to get velocity targets.
-			velocityTargetX = m_posXPID.step(positionX);
-			velocityTargetY = m_posYPID.step(positionY);
-			velocityTargetZ = m_posZPID.step(positionZ);
+			velocityTargetX = m_posXPID.step(positionX - m_obs->ioPositionX);
+			velocityTargetY = m_posYPID.step(positionY - m_obs->ioPositionY);
+			velocityTargetZ = m_posZPID.step(positionZ - m_obs->ioPositionZ);
+
+			velocity(velocityX, velocityY, velocityZ, velocityTargetX, velocityTargetY,
+					velocityTargetZ, m_obs);
 
 			// use velocity targets to reach angles (read: accelerations).
 			roll = (uint16_t)m_rollPID.step(velocityX - velocityTargetX);
